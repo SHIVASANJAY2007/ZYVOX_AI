@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { User, Plane, Globe, Activity, ArrowRight, Layout, Link as LinkIcon, Check, Bell } from 'lucide-react';
 
 const Footer = () => {
@@ -106,13 +107,13 @@ const Footer = () => {
                                 <h2 className="text-5xl md:text-7xl font-bold mb-4 tracking-tighter leading-none">Ready to <br /> Depart?</h2>
                                 <p className="text-indigo-100 font-medium text-lg">Join the community of travelers reshaping global exploration with AI precision.</p>
                             </div>
-                            <button className="mt-8 bg-black text-white rounded-full py-4 px-8 flex items-center justify-between font-bold group hover:bg-[#D94827] transition-all duration-300">
+                            <Link to="/signup" className="mt-8 bg-black text-white rounded-full py-4 px-8 flex items-center justify-between font-bold group hover:bg-[#D94827] transition-all duration-300">
                                 <span className="flex items-center gap-4">
                                     <User className="bg-white/10 rounded-full p-2" size={32} />
                                     LAUNCH
                                 </span>
                                 <span className="group-hover:translate-x-3 transition-transform text-xl">→</span>
-                            </button>
+                            </Link>
                         </div>
                     </div>
 
