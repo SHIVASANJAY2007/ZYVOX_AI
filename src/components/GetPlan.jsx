@@ -1,3 +1,5 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useSignIn, useUser } from '@clerk/clerk-react';
 import { Send, User, Bot, Phone, Video, MoreVertical, Paperclip, Smile, ExternalLink, Shield, Zap, Globe, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
