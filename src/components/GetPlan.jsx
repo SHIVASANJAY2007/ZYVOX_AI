@@ -184,7 +184,7 @@ const GetPlan = () => {
             ];
 
             if (specialEmails.includes(email)) {
-                window.location.href = 'http://localhost:8888';
+                window.location.href = 'https://zyvox-travel-ai-agent.vercel.app';
                 return;
             }
         }
