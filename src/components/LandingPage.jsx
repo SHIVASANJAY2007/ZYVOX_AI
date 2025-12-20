@@ -1,3 +1,4 @@
+import { useUser } from '@clerk/clerk-react'
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Hero from './Hero'
@@ -9,6 +10,7 @@ import PricingSection from './PricingSection'
 import Footer from './Footer'
 
 const LandingPage = () => {
+    const { isSignedIn } = useUser()
     const location = useLocation()
     const [showIntro, setShowIntro] = useState(true)
     const [isFading, setIsFading] = useState(false)
@@ -18,7 +20,9 @@ const LandingPage = () => {
         { label: 'Workflow', href: '#how-it-works' },
         { label: 'Destinations', href: '#destinations' },
         { label: 'Pricing', href: '#pricing' },
-        { label: 'Sign Up', href: '/signup' },
+        isSignedIn
+            ? { label: 'Open App', href: '/get-plan' }
+            : { label: 'Sign Up', href: '/signup' },
     ]
 
     const handleSkip = () => {
