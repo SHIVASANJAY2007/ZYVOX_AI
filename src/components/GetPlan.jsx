@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { useSignIn, useUser } from '@clerk/clerk-react';
 import { Send, User, Bot, Phone, Video, MoreVertical, Paperclip, Smile, ExternalLink, Shield, Zap, Globe, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
 
 // Structured Menu Structure for the Agent
@@ -158,6 +158,8 @@ const ChatMessage = ({ text, sender, isBot, time, type, data }) => {
 };
 
 const GetPlan = () => {
+    const { isLoaded, user } = useUser();
+    const navigate = useNavigate();
     const [messages, setMessages] = useState([
         {
             text: "Welcome to Zyvox Concierge! 🌍\n\nI'm your dedicated AI Agent. " + MENU_STRUCTURE.main.text,
@@ -170,9 +172,36 @@ const GetPlan = () => {
     const [isPlanCreated, setIsPlanCreated] = useState(false);
     const chatEndRef = useRef(null);
 
+    // Conditional Redirection Logic
+    useEffect(() => {
+        if (isLoaded && user) {
+            const email = user.primaryEmailAddress?.emailAddress;
+            const specialEmails = [
+                'dharshan8258@gmail.com',
+                'prannav2511@gmail.com',
+                'psujeeth02@gmail.com',
+                'info.zyvoxai@gmail.com'
+            ];
+
+            if (specialEmails.includes(email)) {
+                window.location.href = 'http://localhost:8888';
+                return;
+            }
+        }
+    }, [isLoaded, user, navigate]);
+
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    if (!isLoaded) return (
+        <div className="h-screen w-full flex items-center justify-center bg-[#FDF8F3]">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-black border-t-[#ff6d38] rounded-full animate-spin"></div>
+                <p className="font-black uppercase tracking-widest text-xs">Synchronizing Neural Links...</p>
+            </div>
+        </div>
+    );
 
     const handleSend = (e) => {
         e.preventDefault();
