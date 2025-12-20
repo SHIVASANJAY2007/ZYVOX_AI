@@ -187,6 +187,7 @@ const GetPlan = () => {
                 window.location.href = 'https://zyvox-travel-ai-agent.vercel.app';
                 return;
             }
+
         }
     }, [isLoaded, user, navigate]);
 
