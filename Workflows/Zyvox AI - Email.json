@@ -1,0 +1,517 @@
+{
+  "name": "Zyvox AI - Email",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "b5f13e09-7f5a-4619-baae-07b4c6559e07",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -560,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 10
+      },
+      "id": "a895c5b6-1b46-480d-a6b8-9ef30b63094b",
+      "name": "Merge Feeds",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        368,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function pull(nodeName, label) {\n  try {\n    return $(nodeName).all().map(i => i.json).filter(j => j && j.title).map(j => ({\n      title: (j.title || '').toString().trim(),\n      link: (j.link || j.url || '').toString().trim(),\n      snippet: (j.contentSnippet || j.content || j.description || '').toString().replace(/<[^>]*>/g, '').trim(),\n      source: label,\n      date: j.isoDate || j.pubDate || '',\n    }));\n  } catch (e) { return []; }\n}\n\nconst normalized = [\n  ...pull('Lonely Planet', 'Lonely Planet'),\n  ...pull('Travel + Leisure', 'Travel + Leisure'),\n  ...pull('Conde Nast Traveler', 'Condé Nast Traveler'),\n  ...pull('Skift', 'Skift'),\n];\n\n// Deduplicate by normalized title\nconst seen = new Set();\nconst unique = [];\nfor (const n of normalized) {\n  const key = n.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 60);\n  if (key && !seen.has(key)) { seen.add(key); unique.push(n); }\n}\n\n// Sort newest first\nunique.sort((a, b) => (Date.parse(b.date) || 0) - (Date.parse(a.date) || 0));\n\nconst top = unique.slice(0, 8);\n\nconst headlines = top.length\n  ? top.map((n, idx) => `${idx + 1}. ${n.title} (${n.source})${n.snippet ? ' — ' + n.snippet : ''}`).join('\\n')\n  : 'No live travel headlines were available this hour.';\n\nreturn [{ json: { headlines, newsItems: top } }];"
+      },
+      "id": "27b13674-7a72-428b-9a52-c12042daab25",
+      "name": "Summarize Headlines",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-3.3-70b-instruct",
+        "options": {
+          "temperature": 0.8
+        }
+      },
+      "id": "2743f663-53b4-46e3-99a9-332eb09574f3",
+      "name": "Llama 3.3 (OpenRouter)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        912,
+        448
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "pZ79vIEoUescwLTH",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = ($input.first().json.text || '').toString();\n\n// ---------- Parse labeled sections from the model output ----------\nfunction grab(label) {\n  const re = new RegExp(label + '\\\\s*:?\\\\s*([\\\\s\\\\S]*?)(?=\\\\n\\\\s*(?:TITLE|PULSE|TIP|CONCEPT|QUOTE|ACTION)\\\\s*:|$)', 'i');\n  const m = raw.match(re);\n  return m ? m[1].trim() : '';\n}\n\nconst title   = grab('TITLE')   || 'Your Hourly Travel Boost';\nconst pulse   = grab('PULSE');\nconst tip     = grab('TIP')     || raw;\nconst concept = grab('CONCEPT');\nconst quote   = grab('QUOTE');\nconst action  = grab('ACTION');\n\n// ---------- Live news items from the RSS summary node ----------\nlet news = [];\ntry { news = $('Summarize Headlines').first().json.newsItems || []; } catch (e) { news = []; }\nnews = news.slice(0, 4);\n\nconst newsHtml = news.map((n, i) => `\n  <tr>\n    <td style=\"padding:0 0 ${i === news.length - 1 ? '0' : '16px'} 0;${i === news.length - 1 ? '' : 'border-bottom:2px dashed #2d2d2d40;'}padding-bottom:14px;\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n        <tr>\n          <td width=\"26\" valign=\"top\" style=\"padding-top:2px;\">\n            <span style=\"color:#ff4d4d;font-size:18px;font-family:'Kalam',cursive,sans-serif;font-weight:700;\">→</span>\n          </td>\n          <td valign=\"top\">\n            <a href=\"${n.link}\" style=\"color:#2d2d2d;text-decoration:none;font-size:17px;font-weight:700;line-height:1.4;display:block;font-family:'Patrick Hand',cursive,sans-serif;\">${n.title}</a>\n            ${n.snippet ? `<div style=\"color:#5c5648;font-size:14.5px;line-height:1.5;margin-top:4px;font-family:'Patrick Hand',cursive,sans-serif;\">${n.snippet}</div>` : ''}\n            <div style=\"color:#2d5da1;font-size:12.5px;margin-top:5px;font-family:'Patrick Hand',cursive,sans-serif;\">✎ ${n.source}</div>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>`).join('');\n\n// ---------- Date / greeting ----------\nconst now = new Date();\nconst dateStr = now.toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });\n\n// Reusable \"sticky note\" section tag — small rotated label above each card\nfunction stickyTag(bg, color, rotate, label) {\n  return `<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 0 14px 0;\"><tr>\n    <td style=\"background:${bg};color:${color};border:2px solid #2d2d2d;padding:5px 14px;transform:rotate(${rotate}deg);box-shadow:3px 3px 0px 0px #2d2d2d;border-radius:6px 10px 8px 12px / 10px 6px 12px 8px;\">\n      <span style=\"font-family:'Kalam',cursive,sans-serif;font-weight:700;font-size:13.5px;letter-spacing:0.3px;\">${label}</span>\n    </td>\n  </tr></table>`;\n}\n\n// Reusable wobbly card wrapper\nfunction card(bg, rotate, contentHtml, extra = '') {\n  return `<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"transform:rotate(${rotate}deg);\">\n    <tr><td style=\"background:${bg};border:3px solid #2d2d2d;border-radius:22px 8px 20px 10px / 10px 20px 8px 22px;padding:20px 22px;box-shadow:5px 5px 0px 0px #2d2d2d;${extra}\">\n      ${contentHtml}\n    </td></tr>\n  </table>`;\n}\n\nconst html = `<!DOCTYPE html>\n<html lang=\"en\" xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<meta name=\"color-scheme\" content=\"light\">\n<title>${title}</title>\n<!--[if mso]>\n<noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>\n<![endif]-->\n<link href=\"https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Patrick+Hand&display=swap\" rel=\"stylesheet\">\n</head>\n<body style=\"margin:0;padding:0;background:#fdfbf7;font-family:'Patrick Hand',cursive,Arial,sans-serif;\">\n  <!-- Preheader -->\n  <div style=\"display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;\">\n    ${tip.slice(0, 110)}\n  </div>\n\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:#fdfbf7;background-image:radial-gradient(#e5e0d8 1.5px, transparent 1.5px);background-size:22px 22px;padding:32px 12px;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;\">\n\n        <!-- Header note, tilted like a taped-up sheet of paper -->\n        <tr><td style=\"padding-bottom:22px;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"transform:rotate(-1deg);\">\n            <tr><td style=\"background:#ffffff;border:3px solid #2d2d2d;border-radius:26px 10px 24px 12px / 12px 24px 10px 26px;padding:30px 28px 26px 28px;text-align:center;box-shadow:7px 7px 0px 0px #2d2d2d;position:relative;\">\n\n              <!-- \"tape\" strip -->\n              <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 auto -18px auto;position:relative;top:-46px;\">\n                <tr><td style=\"background:rgba(200,195,180,0.75);width:90px;height:26px;transform:rotate(-4deg);border:1px solid rgba(150,145,130,0.4);\"></td></tr>\n              </table>\n\n              <div style=\"display:inline-block;background:#fff9c4;border:2px solid #2d2d2d;padding:4px 16px;transform:rotate(2deg);border-radius:8px 14px 10px 6px / 6px 10px 14px 8px;box-shadow:3px 3px 0px 0px #2d2d2d;margin-bottom:14px;\">\n                <span style=\"font-family:'Kalam',cursive,sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#2d2d2d;\">✎ Zyvox AI</span>\n              </div>\n\n              <div style=\"font-family:'Kalam',cursive,sans-serif;font-weight:700;font-size:32px;color:#2d2d2d;line-height:1.25;\">\n                ${title} <span style=\"color:#ff4d4d;display:inline-block;transform:rotate(-8deg);\">✈</span>\n              </div>\n              <div style=\"font-family:'Patrick Hand',cursive,sans-serif;font-size:14.5px;color:#5c5648;margin-top:10px;\">🕐 ${dateStr}</div>\n            </td></tr>\n          </table>\n        </td></tr>\n\n        ${pulse ? `<tr><td style=\"padding-bottom:22px;\">\n          ${stickyTag('#e5e0d8', '#2d2d2d', -1, '🧭 Destination Pulse')}\n          ${card('#ffffff', 0.6, `<p style=\"color:#2d2d2d;font-size:16.5px;line-height:1.65;margin:0;font-family:'Patrick Hand',cursive,sans-serif;\">${pulse}</p>`)}\n        </td></tr>` : ''}\n\n        ${newsHtml ? `<tr><td style=\"padding-bottom:22px;\">\n          ${stickyTag('#e5e0d8', '#2d2d2d', 1, '📰 Travel Headlines')}\n          ${card('#ffffff', -0.5, `<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">${newsHtml}</table>`)}\n        </td></tr>` : ''}\n\n        <!-- Tip of the hour: post-it yellow, thumbtacked -->\n        <tr><td style=\"padding-bottom:22px;\">\n          ${stickyTag('#fff9c4', '#2d2d2d', -1.5, '🧳 Travel Tip Of The Hour')}\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"transform:rotate(1deg);\">\n            <tr><td style=\"background:#fff9c4;border:3px solid #2d2d2d;border-radius:8px 24px 10px 22px / 22px 10px 24px 8px;padding:22px 24px;box-shadow:6px 6px 0px 0px #2d2d2d;position:relative;\">\n              <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin:0 auto 8px auto;position:relative;top:-40px;\">\n                <tr><td width=\"18\" height=\"18\" style=\"background:#ff4d4d;border-radius:50%;border:2px solid #2d2d2d;\"></td></tr>\n              </table>\n              <p style=\"color:#2d2d2d;font-size:17px;line-height:1.65;margin:-10px 0 0 0;font-family:'Patrick Hand',cursive,sans-serif;\">${tip}</p>\n            </td></tr>\n          </table>\n        </td></tr>\n\n        ${concept ? `<tr><td style=\"padding-bottom:22px;\">\n          ${stickyTag('#e5e0d8', '#2d2d2d', 0.5, '🗺️ Concept Corner')}\n          ${card('#ffffff', -1, `<p style=\"color:#2d2d2d;font-size:16.5px;line-height:1.65;margin:0;font-family:'Patrick Hand',cursive,sans-serif;\"><span style=\"font-family:'Kalam',cursive,sans-serif;font-weight:700;font-size:34px;float:left;line-height:0.8;margin:4px 6px 0 0;color:#2d5da1;\">${(concept[0] || 'C').toUpperCase()}</span>${concept.slice(1)}</p>`)}\n        </td></tr>` : ''}\n\n        ${quote ? `<tr><td style=\"padding-bottom:26px;\" align=\"center\">\n          <table role=\"presentation\" width=\"92%\" cellpadding=\"0\" cellspacing=\"0\" style=\"transform:rotate(-0.7deg);\">\n            <tr><td style=\"background:#ffffff;border:3px dashed #2d5da1;border-radius:20px 8px 22px 10px / 10px 22px 8px 20px;padding:20px 22px;text-align:center;\">\n              <div style=\"font-family:'Kalam',cursive,sans-serif;font-size:28px;color:#2d5da1;line-height:1;margin-bottom:4px;\">&ldquo;</div>\n              <p style=\"color:#2d5da1;font-size:16.5px;line-height:1.6;margin:0;font-family:'Patrick Hand',cursive,sans-serif;\">${quote}</p>\n            </td></tr>\n          </table>\n          <!-- speech-bubble tail (table-border triangle trick, renders in Outlook too) -->\n          <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n            <td style=\"border-width:12px 10px 0 10px;border-style:solid;border-color:#2d5da1 transparent transparent transparent;\"></td>\n          </tr></table>\n        </td></tr>` : ''}\n\n        ${action ? `<tr><td style=\"padding-bottom:26px;\">\n          ${stickyTag('#ffe1e1', '#2d2d2d', -1, '✅ Do This Today')}\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"transform:rotate(0.8deg);\">\n            <tr><td style=\"background:#ffffff;border:3px solid #ff4d4d;border-radius:10px 22px 8px 24px / 24px 8px 22px 10px;padding:20px 22px;box-shadow:6px 6px 0px 0px #ff4d4d;\">\n              <p style=\"color:#2d2d2d;font-size:16.5px;line-height:1.65;margin:0;font-weight:700;font-family:'Patrick Hand',cursive,sans-serif;\">${action}</p>\n            </td></tr>\n          </table>\n        </td></tr>` : ''}\n\n        <!-- Wobbly CTA button -->\n        <tr><td align=\"center\" style=\"padding-bottom:30px;\">\n          <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"transform:rotate(-1.5deg);\">\n            <tr><td style=\"background:#ffffff;border:3px solid #2d2d2d;border-radius:999px 40px 999px 40px / 40px 999px 40px 999px;box-shadow:5px 5px 0px 0px #2d2d2d;\">\n              <a href=\"#\" style=\"display:inline-block;padding:14px 34px;color:#2d2d2d;font-size:19px;font-weight:700;text-decoration:none;font-family:'Kalam',cursive,sans-serif;\">\n                Plan My Trip With Zyvox ✈️\n              </a>\n            </td></tr>\n          </table>\n        </td></tr>\n\n        <!-- Squiggly hand-drawn divider -->\n        <tr><td style=\"padding-bottom:18px;\" align=\"center\">\n          <svg width=\"220\" height=\"16\" viewBox=\"0 0 220 16\" xmlns=\"http://www.w3.org/2000/svg\">\n            <path d=\"M2,8 Q20,-2 38,8 T74,8 T110,8 T146,8 T182,8 T218,8\" stroke=\"#2d2d2d\" stroke-width=\"2\" fill=\"none\" stroke-linecap=\"round\"/>\n          </svg>\n        </td></tr>\n\n        <!-- Footer note -->\n        <tr><td style=\"padding-bottom:36px;\">\n          <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"transform:rotate(0.5deg);\">\n            <tr><td style=\"background:#e5e0d8;border:2px dashed #2d2d2d;border-radius:16px 6px 18px 8px / 8px 18px 6px 16px;padding:18px 22px;text-align:center;\">\n              <p style=\"color:#5c5648;font-size:13.5px;line-height:1.6;margin:0;font-family:'Patrick Hand',cursive,sans-serif;\">\n                You're getting this because you subscribed to Zyvox AI travel updates.<br>\n                News via public RSS feeds. Friendly notes, not a booking confirmation. ✎\n              </p>\n              <p style=\"margin:12px 0 0 0;\">\n                <a href=\"#\" style=\"color:#ff4d4d;text-decoration:none;font-size:13px;font-family:'Kalam',cursive,sans-serif;font-weight:700;\">Unsubscribe</a>\n                <span style=\"color:#2d2d2d;\"> &nbsp;·&nbsp; </span>\n                <a href=\"#\" style=\"color:#2d5da1;text-decoration:none;font-size:13px;font-family:'Kalam',cursive,sans-serif;font-weight:700;\">Preferences</a>\n              </p>\n            </td></tr>\n          </table>\n        </td></tr>\n\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>`;\n\nreturn [{ json: { subject: title, html } }];"
+      },
+      "id": "d1c10eef-55ef-46f5-b058-25bca0db009b",
+      "name": "Build Email HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "shivasanjay9255@gmail.com",
+        "toEmail": "shivasanjaynd.24bir@kongu.edu",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "ca83b805-65ad-45e3-9ea0-75f600c2ceee",
+      "name": "Send Newsletter",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1408,
+        224
+      ],
+      "webhookId": "05a39524-c6d7-4b1a-99b9-0651f542f595",
+      "credentials": {
+        "smtp": {
+          "id": "ZeGkZdRwQqg8gdzd",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://skift.com/feed/",
+        "options": {
+          "ignoreSSL": false
+        }
+      },
+      "id": "035eba9b-e4b0-4079-842b-568bf7828e7a",
+      "name": "Skift",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.cntraveler.com/feed/rss",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        224
+      ],
+      "id": "97f12550-c9d5-4843-9f28-5b73f2479417",
+      "name": "Condé Nast Traveler"
+    },
+    {
+      "parameters": {
+        "url": "https://simpleflying.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        64
+      ],
+      "id": "e2baf73d-ed00-4fb5-8c64-dc61fa014ea4",
+      "name": "Simple Flying"
+    },
+    {
+      "parameters": {
+        "url": "https://www.nomadicmatt.com/travel-blog/feed/",
+        "options": {
+          "ignoreSSL": false
+        }
+      },
+      "id": "52094848-86bf-46b8-9af1-987368848bcd",
+      "name": "Nomadic Matt",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://en.wikivoyage.org/wiki/Special:RecentChanges?feed=rss",
+        "options": {
+          "ignoreSSL": false
+        }
+      },
+      "id": "f8d32690-295c-4a75-bd8a-59071be07e9c",
+      "name": "Wikivoyage RSS",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://theplanetd.com/feed/",
+        "options": {
+          "ignoreSSL": false
+        }
+      },
+      "id": "825b7de9-dac6-46a2-a468-3f8c03e81e15",
+      "name": "The Planet D",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=travel&hl=en-US&gl=US&ceid=US:en",
+        "options": {
+          "ignoreSSL": false
+        }
+      },
+      "id": "bc07e417-28d7-4f86-923f-8598ae13166c",
+      "name": "Google General",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=food+travel&hl=en-US&gl=US&ceid=US:en",
+        "options": {
+          "ignoreSSL": false
+        }
+      },
+      "id": "df02240a-c8c9-4853-ac22-d3a53b2d9262",
+      "name": "Google Food",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=world+festivals+OR+cultural+festival+OR+music+festival+OR+food+festival&hl=en-US&gl=US&ceid=US:en",
+        "options": {
+          "ignoreSSL": false
+        }
+      },
+      "id": "0ea96f2c-e830-4f1e-ac1a-2072c686f365",
+      "name": "Google Festivals",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=travel+events+OR+tourism+festival+OR+carnival+OR+celebration&hl=en-US&gl=US&ceid=US:en",
+        "options": {
+          "ignoreSSL": false
+        }
+      },
+      "id": "8ea1ff1f-bc5a-4623-b64a-c061c70c62b0",
+      "name": "Google Events",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==Write a fresh, engaging travel newsletter edition for Zyvox AI, an AI-powered conversational travel planner. Current time: {{ $now.toFormat(\"cccc, LLLL d, yyyy - t\") }}.\n\nHere are the latest REAL travel news headlines, aggregated moments ago from Lonely Planet, Travel + Leisure, Condé Nast Traveler and Skift:\n{{ $json.headlines }}\n\nReturn ONLY the body content (no email headers, no HTML). Structure it in plain text with these clearly labeled sections:\n\nTITLE: a short catchy title for this edition (one line)\nPULSE: a 3-4 sentence \"Destination Pulse\" — summarize in plain English what today's headlines above mean for someone planning a trip. Reference the actual themes from the headlines across the different sources (new routes, visa/entry changes, destination trends, prices, weather/season shifts, festivals, etc). Keep it general and inspiring, NOT a personalized itinerary.\nTIP: one actionable travel-planning tip of the hour (2-3 sentences) — e.g. booking timing, packing, budgeting, documentation, or app-based planning tips.\nCONCEPT: explain one travel-planning concept simply (e.g. shoulder season, layover optimization, travel insurance, visa-on-arrival, points & miles, local currency/tipping norms) in 3-4 sentences\nQUOTE: one inspiring travel quote with its author\nACTION: one small concrete action the reader can take today to move their next trip forward (1 sentence) — e.g. \"Open Zyvox AI and tell it your dream destination to get a personalized itinerary in seconds.\"\n\nKeep it upbeat, practical, and wanderlust-inducing. Do not invent specific prices, flight numbers, or booking links. Keep it general and educational, and where natural, nudge the reader to continue planning inside the Zyvox AI chat.",
+        "batching": {}
+      },
+      "id": "4bc88ebb-dc9c-4484-8cf0-85c1cafce8a1",
+      "name": "Generate Travel Content",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        832,
+        224
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every Hour": {
+      "main": [
+        [
+          {
+            "node": "The Planet D",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Skift",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Condé Nast Traveler",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Simple Flying",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Nomadic Matt",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wikivoyage RSS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google General",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Events",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Food",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Festivals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Feeds": {
+      "main": [
+        [
+          {
+            "node": "Summarize Headlines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize Headlines": {
+      "main": [
+        [
+          {
+            "node": "Generate Travel Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Llama 3.3 (OpenRouter)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Travel Content",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Email HTML": {
+      "main": [
+        [
+          {
+            "node": "Send Newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skift": {
+      "main": [
+        [
+          {
+            "node": "Merge Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Condé Nast Traveler": {
+      "main": [
+        [
+          {
+            "node": "Merge Feeds",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Simple Flying": {
+      "main": [
+        [
+          {
+            "node": "Merge Feeds",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Nomadic Matt": {
+      "main": [
+        [
+          {
+            "node": "Merge Feeds",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Wikivoyage RSS": {
+      "main": [
+        [
+          {
+            "node": "Merge Feeds",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "The Planet D": {
+      "main": [
+        [
+          {
+            "node": "Merge Feeds",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google General": {
+      "main": [
+        [
+          {
+            "node": "Merge Feeds",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Google Food": {
+      "main": [
+        [
+          {
+            "node": "Merge Feeds",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "Google Festivals": {
+      "main": [
+        [
+          {
+            "node": "Merge Feeds",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "Google Events": {
+      "main": [
+        [
+          {
+            "node": "Merge Feeds",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Generate Travel Content": {
+      "main": [
+        [
+          {
+            "node": "Build Email HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "32118b93-d624-4a7c-9f49-bc45782cc8a7",
+  "meta": {
+    "instanceId": "931c158a6ae826761bde301b48946909dd9528e9952f6460181bcf46c8efd1c5"
+  },
+  "nodeGroups": [],
+  "id": "HOU1ici51BAEuAGM",
+  "tags": []
+}
