@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useSignIn, useUser } from '@clerk/clerk-react';
 import { Send, User, Bot, Phone, Video, MoreVertical, Paperclip, Smile, ExternalLink, Shield, Zap, Globe, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
 
 // Structured Menu Structure for the Agent
@@ -160,7 +159,8 @@ const ChatMessage = ({ text, sender, isBot, time, type, data }) => {
 };
 
 const GetPlan = () => {
-    const { isLoaded, user } = useUser();
+    // const { isLoaded, user } = useUser();
+    const isLoaded = true; // bypassed
     const navigate = useNavigate();
     const [messages, setMessages] = useState([
         {
@@ -190,7 +190,7 @@ const GetPlan = () => {
         </div>
     );
 
-    const handleSend = (e) => {
+    const handleSend = async (e) => {
         e.preventDefault();
         if (!inputValue.trim()) return;
 
@@ -199,48 +199,74 @@ const GetPlan = () => {
         setMessages(prev => [...prev, { text: userMsg, isBot: false, time: now }]);
         setInputValue('');
 
-        setTimeout(() => {
-            const menu = MENU_STRUCTURE[currentMenu];
+        try {
+            const sessionId =
+                localStorage.getItem("sessionId") || crypto.randomUUID();
 
-            // Check if user input is a valid number in current menu
-            if (menu && menu.options[userMsg]) {
-                const nextKey = menu.options[userMsg];
+            localStorage.setItem("sessionId", sessionId);
 
-                if (nextKey === 'generate') {
-                    triggerPlan(now);
-                } else if (MENU_STRUCTURE[nextKey]) {
-                    // Navigate to sub-menu
-                    setCurrentMenu(nextKey);
-                    setMessages(prev => [...prev, {
-                        text: MENU_STRUCTURE[nextKey].text,
-                        isBot: true,
-                        time: now
-                    }]);
-                } else if (RESPONSES[nextKey]) {
-                    // Show final response
-                    setMessages(prev => [...prev, {
-                        text: RESPONSES[nextKey],
-                        isBot: true,
-                        time: now
-                    }]);
+            const response = await fetch(
+                "https://shivasanjay.app.n8n.cloud/webhook/591a4f49-ef7f-443f-9374-13120ae3dc94",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        chatInput: userMsg,
+                        sessionId: sessionId
+                    })
                 }
-            } else if (userMsg === '0' && currentMenu !== 'main') {
-                // Explicit back handling if not in structured menu options
-                setCurrentMenu('main');
-                setMessages(prev => [...prev, {
-                    text: MENU_STRUCTURE.main.text,
-                    isBot: true,
-                    time: now
-                }]);
-            } else {
-                // Fallback for non-numeric or invalid inputs
-                setMessages(prev => [...prev, {
-                    text: "I'm sorry, I didn't recognize that option. Please type a number from the list above, or type '0' to return to the Main Menu.",
-                    isBot: true,
-                    time: now
-                }]);
+            );
+
+            const text = await response.text();
+
+            console.log("Response from n8n:");
+            console.log(text);
+            
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                data = text;
             }
-        }, 800);
+
+            // Handle different possible response formats from n8n
+            let botText = "";
+            if (data && data.output) {
+                botText = data.output;
+            } else if (data && data.text) {
+                botText = data.text;
+            } else if (data && data.message) {
+                botText = data.message;
+            } else if (Array.isArray(data) && data.length > 0) {
+                if (data[0].output) botText = data[0].output;
+                else if (data[0].text) botText = data[0].text;
+                else if (data[0].message) botText = data[0].message;
+                else botText = JSON.stringify(data[0]);
+            } else if (typeof data === 'string' && data.trim() !== '') {
+                botText = data;
+            } else if (data !== undefined && data !== null && data !== "") {
+                botText = JSON.stringify(data);
+            }
+
+            if (!botText.trim()) {
+                botText = "⚠️ Received an empty response from the n8n webhook. Make sure your n8n Webhook node is set to 'Respond: When Last Node Finishes' or uses a 'Respond to Webhook' node.";
+            }
+
+            setMessages(prev => [...prev, {
+                text: botText,
+                isBot: true,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }]);
+        } catch (error) {
+            console.error('Webhook error:', error);
+            setMessages(prev => [...prev, {
+                text: "Error connecting to AI Assistant.",
+                isBot: true,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }]);
+        }
     };
 
     const triggerPlan = (time) => {
