@@ -38,13 +38,13 @@ const SignUp = () => {
             <div className="flex w-full max-w-5xl bg-[#fdf8f3] rounded-3xl overflow-hidden shadow-none">
                 {/* Left Side - Image */}
                 <div className="hidden md:flex w-1/2 p-4 items-center justify-center">
-                    <div className="relative w-full h-[600px] rounded-[40px] overflow-hidden bg-[#ff6d38] border-2 border-black">
+                    <div className="relative w-full h-[600px] rounded-[40px] overflow-hidden bg-[#0a0a0a] border-2 border-black flex items-center justify-center">
                         <img
-                            src="/assets/login_illustration.png"
-                            alt="Sign Up"
-                            className="w-full h-full object-cover"
+                            src="/assets/logo/logo.png"
+                            alt="Zyvox AI"
+                            className="w-3/4 h-auto object-contain"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-orange-500/20 pointer-events-none"></div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none"></div>
                     </div>
                 </div>
 

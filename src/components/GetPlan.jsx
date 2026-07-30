@@ -174,24 +174,8 @@ const GetPlan = () => {
     const [isPlanCreated, setIsPlanCreated] = useState(false);
     const chatEndRef = useRef(null);
 
-    // Conditional Redirection Logic
-    useEffect(() => {
-        if (isLoaded && user) {
-            const email = user.primaryEmailAddress?.emailAddress;
-            const specialEmails = [
-                'dharshan8258@gmail.com',
-                'prannav2511@gmail.com',
-                'psujeeth02@gmail.com',
-                'info.zyvoxai@gmail.com'
-            ];
 
-            if (specialEmails.includes(email)) {
-                window.location.href = 'https://zyvox-travel-ai-agent.vercel.app';
-                return;
-            }
 
-        }
-    }, [isLoaded, user, navigate]);
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
