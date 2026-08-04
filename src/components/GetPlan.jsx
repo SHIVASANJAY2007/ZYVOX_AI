@@ -2,107 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Send, User, Bot, Phone, Video, MoreVertical, Paperclip, Smile, ExternalLink, Shield, Zap, Globe, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
+import AnimatedIconBackground from './AnimatedIconBackground';
 
-// Structured Menu Structure for the Agent
-const MENU_STRUCTURE = {
-    main: {
-        text: "How can I assist you today? Please select an option by typing the number:\n\n1) 🌎 Explore Destinations\n2) 📋 Travel Logistics & FAQs\n3) 💎 Exclusive Membership\n4) 🛡️ Safety & Insurance\n5) ⚡ Generate My Plan",
-        options: {
-            "1": "destinations",
-            "2": "logistics",
-            "3": "membership",
-            "4": "safety",
-            "5": "generate"
-        }
-    },
-    destinations: {
-        text: "Where are we heading? Pick a region:\n\n1) 🗼 Europe (Paris, London, Santorini)\n2) 🍣 Asia (Tokyo, Bali)\n3) 🏙️ Americas (New York)\n4) 🏝️ Tropical (Maldives)\n5) 🐪 Middle East (Dubai)\n0) ⬅️ Back to Main Menu",
-        options: {
-            "1": "europe",
-            "2": "asia",
-            "3": "americas",
-            "4": "tropical",
-            "5": "dubai",
-            "0": "main"
-        }
-    },
-    europe: {
-        text: "European Gems:\n\n1) Paris (The City of Light)\n2) London (Modern Majesty)\n3) Santorini (Caldera Views)\n4) Switzerland (Alpine Luxury)\n0) ⬅️ Back",
-        options: {
-            "1": "paris",
-            "2": "london",
-            "3": "santorini",
-            "4": "switzerland",
-            "0": "destinations"
-        }
-    },
-    asia: {
-        text: "Asian Icons:\n\n1) Tokyo (Contrast & Culture)\n2) Bali (Spiritual Retreat)\n0) ⬅️ Back",
-        options: {
-            "1": "tokyo",
-            "2": "bali",
-            "0": "destinations"
-        }
-    },
-    logistics: {
-        text: "Logistics Support:\n\n1) 🎫 Visa Consultation\n2) ✈️ Flight Tracking\n3) 🏨 Hotel Partnerships\n4) 💳 Payments & Refunds\n0) ⬅️ Back to Main Menu",
-        options: {
-            "1": "visa",
-            "2": "flights",
-            "3": "hotel",
-            "4": "payment",
-            "0": "main"
-        }
-    },
-    membership: {
-        text: "Zyvox Elite Membership:\n\n1) 🌟 Perks & Upgrades\n2) 🤝 Human Concierge Access\n3) 🔒 Privacy Standards\n0) ⬅️ Back to Main Menu",
-        options: {
-            "1": "perks",
-            "2": "concierge",
-            "3": "privacy",
-            "0": "main"
-        }
-    },
-    safety: {
-        text: "Safety & Security:\n\n1) 🚑 Emergency Support\n2) 🌍 Travel Advisories\n3) 📜 Insurance Coverage\n0) ⬅️ Back to Main Menu",
-        options: {
-            "1": "emergency",
-            "2": "advisory",
-            "3": "insurance",
-            "0": "main"
-        }
-    }
-};
 
-// Response content for leaf nodes
-const RESPONSES = {
-    paris: "Paris! The City of Light. I recommend a stay in Le Marais for the best local vibe, or the 1er Arrondissement for classic luxury near the Louvre. (Type '5' to start your plan)",
-    london: "A classic! Mayfair is ideal for luxury, or Shoreditch for a modern, creative edge. Shall I secure your table at The Shard? (Type '5' to start your plan)",
-    tokyo: "Tokyo is a masterpiece of contrast. From the neon lights of Shinjuku to the serenity of Meiji Shrine. (Type '5' to start your plan)",
-    bali: "Bali is perfect right now. Ubud offers the best spiritual retreat, while Uluwatu has world-class cliffside villas. (Type '5' to start your plan)",
-    santorini: "The sunsets in Oia are unmatched. I recommend a boutique cave hotel with a private caldera view. (Type '5' to start your plan)",
-    switzerland: "Whether it's Zermatt for skiing or Lucerne for lakeside luxury, I can arrange your Swiss Travel Pass. (Type '5' to start your plan)",
-    americas: "The Americas! From the lights of NYC to the beaches of Rio. Stay in Central Park South for the icons. (Type '5' to start your plan)",
-    tropical: "Ultimate seclusion. I have exclusive rates for overwater villas in the Noonu Atoll. (Type '5' to start your plan)",
-    dubai: "Dubai is about grandeur. I suggest the Burj Al Arab or a private desert safari. (Type '5' to start your plan)",
-    visa: "I handle visa consultations for all major destinations. For many countries, I can expedite E-Visas directly.",
-    flights: "I track real-time price drops in First and Business class. I can also arrange private jet charters.",
-    hotel: "I only partner with 5-star and boutique properties. My users get automatic upgrades.",
-    payment: "We support all major cards, crypto, and 'Book Now, Pay Later' options.",
-    perks: "Zyvox members get automatic room upgrades, late checkouts, and airport lounge access globally.",
-    concierge: "Our human concierge team is available 24/7 for complex requests that require a personal touch.",
-    privacy: "Your data is encrypted and never sold. We prioritize the security of our elite travelers.",
-    emergency: "We provide 24/7 emergency medical evacuation and local security support in every destination.",
-    advisory: "I monitor global travel advisories 24/7 and will alert you instantly if your plans need to change.",
-    insurance: "Our 'Odyssey Plus' insurance covers medical, cancellation, and even lost tech gear.",
-};
 
 const ChatMessage = ({ text, sender, isBot, time, type, data }) => {
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className={`flex w-full mb-4 ${isBot ? 'justify-start' : 'justify-end'}`}
+            className={`flex w-full mb-4 relative z-10 ${isBot ? 'justify-start' : 'justify-end'}`}
         >
             <div className={`max-w-[85%] relative ${isBot ? 'bg-white text-black rounded-2xl rounded-tl-none border border-black/5' : 'bg-black text-white rounded-2xl rounded-tr-none'} p-4 shadow-sm`}>
                 {type === 'plan' ? (
@@ -164,13 +73,12 @@ const GetPlan = () => {
     const navigate = useNavigate();
     const [messages, setMessages] = useState([
         {
-            text: "Welcome to Zyvox Concierge! 🌍\n\nI'm your dedicated AI Agent. " + MENU_STRUCTURE.main.text,
+            text: "Welcome to Zyvox Concierge! 🌍\n\nHow can I assist you today?",
             isBot: true,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
     ]);
     const [inputValue, setInputValue] = useState('');
-    const [currentMenu, setCurrentMenu] = useState('main');
     const [isPlanCreated, setIsPlanCreated] = useState(false);
     const chatEndRef = useRef(null);
 
@@ -315,13 +223,14 @@ const GetPlan = () => {
                 </div>
 
                 {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-8 no-scrollbar bg-[#FDF8F3]">
+                <div className="flex-1 overflow-y-auto p-8 no-scrollbar bg-[#FDF8F3] relative">
+                    <AnimatedIconBackground />
                     <AnimatePresence>
                         {messages.map((msg, idx) => (
                             <ChatMessage key={idx} {...msg} />
                         ))}
                     </AnimatePresence>
-                    <div ref={chatEndRef} />
+                    <div ref={chatEndRef} className="relative z-10" />
                 </div>
 
                 {/* Input Bar */}
@@ -330,7 +239,7 @@ const GetPlan = () => {
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
-                        placeholder="Type a number to select..."
+                        placeholder="Type your message..."
                         className="flex-1 bg-gray-50 border-2 border-transparent focus:border-black rounded-2xl px-6 py-4 font-bold text-sm text-black outline-none transition-all placeholder:text-gray-400"
                     />
                     <button
