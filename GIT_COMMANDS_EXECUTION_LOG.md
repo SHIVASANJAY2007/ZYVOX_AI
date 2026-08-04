@@ -36,35 +36,34 @@ git push origin main
 # Checkout workflow-n8n branch tracking origin/workflow-n8n
 git checkout workflow-n8n
 
-# Copy updated n8n workflow files from local Workflow folder into repository directories
-New-Item -ItemType Directory -Force -Path "Workflow", "Workflows"
+# Copy updated n8n workflow files from local Workflow folder into Workflow directory
+New-Item -ItemType Directory -Force -Path "Workflow"
 Copy-Item -Path "..\Workflow\*" -Destination "Workflow\" -Force
-Copy-Item -Path "..\Workflow\*" -Destination "Workflows\" -Force
 
-# Stage updated and newly added workflow files
-git add Workflow Workflows
+# Remove duplicate Workflows folder & include .gitignore and README.md
+git rm -r Workflows
+git checkout main -- .gitignore README.md
 
-# Commit workflow files
-git commit -m "Add and update n8n workflow files in Workflow and Workflows directories"
-
-# Push workflow-n8n branch to remote origin
+# Stage, commit, and push changes
+git add Workflow .gitignore README.md
+git commit -m "refactor: remove duplicate Workflows folder and keep Workflow folder"
 git push origin workflow-n8n
 
 # Switch back to main branch
 git checkout main
 ```
 
-### Files Added / Updated on `workflow-n8n`:
-- `Workflow/Zyvox - Chatbot.json` (n8n Chatbot workflow)
-- `Workflow/Zyvox AI - Email.json` (n8n Email workflow)
-- `Workflows/Zyvox - Chatbot.json` (n8n Chatbot workflow)
-- `Workflows/Zyvox AI - Email.json` (Updated n8n Email workflow schedule configuration)
+### Files Present on `workflow-n8n`:
+- `Workflow/Zyvox - Chatbot.json`
+- `Workflow/Zyvox AI - Email.json`
+- `.gitignore`
+- `README.md`
 
 ---
 
 ## 3. Summary Status
 
-| Branch | Destination Folder | Remote Status |
+| Branch | Root Structure | Remote Status |
 |---|---|---|
-| `main` | `Zyvox AI` | Up to date (`origin/main`) |
-| `workflow-n8n` | `Workflow` / `Workflows` | Pushed (`origin/workflow-n8n`) |
+| `main` | `src`, `public`, `package.json`, etc. | Up to date (`origin/main`) |
+| `workflow-n8n` | `Workflow/`, `.gitignore`, `README.md` | Pushed (`origin/workflow-n8n`) |
