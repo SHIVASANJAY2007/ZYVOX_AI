@@ -28,3 +28,7 @@ dist-ssr
 # Temporary scratch files
 scratch/
 
+# Local logs
+GIT_COMMANDS_EXECUTION_LOG.md
+
+

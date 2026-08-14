@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Send, User, Bot, Phone, Video, MoreVertical, Paperclip, Smile, ExternalLink, Shield, Zap, Globe, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
 import AnimatedIconBackground from './AnimatedIconBackground';
+import { N8N_WEBHOOK_URL } from '../config';
+
 
 
 
@@ -114,7 +116,7 @@ const GetPlan = () => {
             localStorage.setItem("sessionId", sessionId);
 
             const response = await fetch(
-                "https://shivasanjay.app.n8n.cloud/webhook/591a4f49-ef7f-443f-9374-13120ae3dc94",
+                N8N_WEBHOOK_URL,
                 {
                     method: "POST",
                     headers: {
