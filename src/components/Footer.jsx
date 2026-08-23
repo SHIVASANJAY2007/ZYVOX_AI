@@ -107,7 +107,7 @@ const Footer = () => {
                                 <h2 className="text-5xl md:text-7xl font-bold mb-4 tracking-tighter leading-none">Ready to <br /> Depart?</h2>
                                 <p className="text-indigo-100 font-medium text-lg">Join the community of travelers reshaping global exploration with AI precision.</p>
                             </div>
-                            <Link to="/signup" className="mt-8 bg-black text-white rounded-full py-4 px-8 flex items-center justify-between font-bold group hover:bg-[#D94827] transition-all duration-300">
+                            <Link to="/get-plan" className="mt-8 bg-black text-white rounded-full py-4 px-8 flex items-center justify-between font-bold group hover:bg-[#D94827] transition-all duration-300">
                                 <span className="flex items-center gap-4">
                                     <User className="bg-white/10 rounded-full p-2" size={32} />
                                     LAUNCH

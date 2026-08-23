@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Send, User, Bot, Phone, Video, MoreVertical, Paperclip, Smile, ExternalLink, Shield, Zap, Globe, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
 import AnimatedIconBackground from './AnimatedIconBackground';
-import { N8N_WEBHOOK_URL } from '../config';
+import { N8N_WEBHOOK_URL, SIGNUP_ENABLED } from '../config';
+import ResponseRenderer from './ResponseRenderer';
 
 
 
@@ -57,8 +58,8 @@ const ChatMessage = ({ text, sender, isBot, time, type, data }) => {
                         </div>
                     </div>
                 ) : (
-                    <div className="text-sm leading-relaxed font-medium whitespace-pre-wrap">
-                        {text}
+                    <div className="w-full">
+                        <ResponseRenderer text={text} isBot={isBot} />
                     </div>
                 )}
                 <div className="text-[9px] font-bold mt-2 text-gray-400">
@@ -70,22 +71,76 @@ const ChatMessage = ({ text, sender, isBot, time, type, data }) => {
 };
 
 const GetPlan = () => {
-    // const { isLoaded, user } = useUser();
-    const isLoaded = true; // bypassed
+    const [user, setUser] = useState(null);
+    const [isLoaded, setIsLoaded] = useState(false);
     const navigate = useNavigate();
-    const [messages, setMessages] = useState([
-        {
-            text: "Welcome to Zyvox Concierge! 🌍\n\nHow can I assist you today?",
-            isBot: true,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-    ]);
+    const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isPlanCreated, setIsPlanCreated] = useState(false);
     const chatEndRef = useRef(null);
 
+    useEffect(() => {
+        const storedUser = localStorage.getItem('zyvox_user');
+        if (!storedUser) {
+            if (!SIGNUP_ENABLED) {
+                const guestUser = {
+                    name: 'Guest Explorer',
+                    email: 'guest@zyvox.ai',
+                    picture: null,
+                    action: 'Guest'
+                };
+                setUser(guestUser);
+                setIsLoaded(true);
+                setMessages([
+                    {
+                        text: `Welcome to Zyvox Concierge, Guest Explorer! 🌍\n\nHow can I assist you today?`,
+                        isBot: true,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    }
+                ]);
+                return;
+            }
+            navigate('/signup');
+            return;
+        }
 
+        try {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            setIsLoaded(true);
 
+            // Set personalized welcome message
+            const firstName = parsedUser.name ? parsedUser.name.split(' ')[0] : 'Explorer';
+            setMessages([
+                {
+                    text: `Welcome to Zyvox Concierge, ${firstName}! 🌍\n\nHow can I assist you today?`,
+                    isBot: true,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }
+            ]);
+        } catch (e) {
+            console.error('Error parsing user session:', e);
+            if (!SIGNUP_ENABLED) {
+                const guestUser = {
+                    name: 'Guest Explorer',
+                    email: 'guest@zyvox.ai',
+                    picture: null,
+                    action: 'Guest'
+                };
+                setUser(guestUser);
+                setIsLoaded(true);
+                setMessages([
+                    {
+                        text: `Welcome to Zyvox Concierge, Guest Explorer! 🌍\n\nHow can I assist you today?`,
+                        isBot: true,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    }
+                ]);
+            } else {
+                navigate('/signup');
+            }
+        }
+    }, [navigate]);
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -222,17 +277,43 @@ const GetPlan = () => {
                             </div>
                         </div>
                     </div>
+                    {user && (
+                        <div className="flex items-center gap-3 bg-gray-50 border border-black/5 px-4 py-2 rounded-2xl">
+                            {user.picture ? (
+                                <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full border border-black/10 object-cover" />
+                            ) : (
+                                <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center font-bold text-xs">
+                                    {user.name ? user.name[0] : 'U'}
+                                </div>
+                            )}
+                            <div className="hidden sm:block text-left">
+                                <p className="text-xs font-black uppercase tracking-tight leading-none mb-0.5">{user.name}</p>
+                                <button 
+                                    type="button"
+                                    onClick={() => {
+                                        localStorage.removeItem('zyvox_user');
+                                        navigate('/signup');
+                                    }}
+                                    className="text-[9px] font-bold text-red-500 uppercase tracking-wider hover:underline bg-transparent border-none p-0 cursor-pointer"
+                                >
+                                    Log Out
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-8 no-scrollbar bg-[#FDF8F3] relative">
+                <div className="flex-1 relative bg-[#FDF8F3]">
                     <AnimatedIconBackground />
-                    <AnimatePresence>
-                        {messages.map((msg, idx) => (
-                            <ChatMessage key={idx} {...msg} />
-                        ))}
-                    </AnimatePresence>
-                    <div ref={chatEndRef} className="relative z-10" />
+                    <div className="absolute inset-0 overflow-y-auto p-8 no-scrollbar">
+                        <AnimatePresence>
+                            {messages.map((msg, idx) => (
+                                <ChatMessage key={idx} {...msg} />
+                            ))}
+                        </AnimatePresence>
+                        <div ref={chatEndRef} className="relative z-10" />
+                    </div>
                 </div>
 
                 {/* Input Bar */}
