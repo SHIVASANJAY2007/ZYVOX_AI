@@ -176,6 +176,7 @@ const GetPlan = () => {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        "skip_zrok_interstitial": "true"
                     },
                     body: JSON.stringify({
                         chatInput: userMsg,
