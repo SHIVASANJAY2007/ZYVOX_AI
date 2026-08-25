@@ -89,11 +89,11 @@ const Footer = () => {
                 {/* FINAL CONTENT SECTION */}
                 <motion.div
                     style={{ opacity: contentOpacity, y: contentY }}
-                    className="absolute inset-0 z-30 bg-white flex flex-col p-6 md:p-12"
+                    className="absolute inset-0 z-30 bg-white flex flex-col p-6 md:p-12 overflow-y-auto no-scrollbar"
                 >
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 items-center max-w-7xl mx-auto w-full">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch max-w-7xl mx-auto w-full">
                         {/* Travel Illustration */}
-                        <div className="bg-gray-100 rounded-3xl h-[45vh] md:h-full flex items-center justify-center overflow-hidden border border-gray-200">
+                        <div className="bg-gray-100 rounded-3xl h-[30vh] md:h-auto flex items-center justify-center overflow-hidden border border-gray-200">
                             <img
                                 src="/assets/features/wp4069431.jpg"
                                 alt="Travel Destination"
@@ -117,40 +117,7 @@ const Footer = () => {
                         </div>
                     </div>
 
-                    {/* Footer Area */}
-                    <footer className="mt-12 grid grid-cols-2 lg:grid-cols-4 gap-8 border-t border-gray-100 pt-8 text-black w-full max-w-7xl mx-auto mb-10">
-                        <div>
-                            <h4 className="font-bold text-gray-400 uppercase text-[10px] tracking-widest mb-4">Experience</h4>
-                            <ul className="space-y-2 font-black text-sm uppercase">
-                                <li className="hover:text-[#6366F1] cursor-pointer">Destinations</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-gray-400 uppercase text-[10px] tracking-widest mb-4">Connect with us</h4>
-                            <div className="flex flex-col gap-3">
-                                <button
-                                    onClick={handleSubscribe}
-                                    className="bg-black text-white px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest hover:bg-[#D94827] transition-colors flex items-center gap-2 w-fit group"
-                                >
-                                    <Bell size={12} className="group-hover:rotate-12 transition-transform" />
-                                    Subscribe
-                                </button>
-                                <p className="text-[10px] uppercase font-bold text-gray-400 max-w-[150px] leading-tight opacity-60">
-                                    Join our exclusive network for updates.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="col-span-2 flex flex-col md:items-end gap-6 justify-between">
-                            <div className="flex gap-2">
-                                {['X', 'Discord', 'Instagram'].map(social => (
-                                    <button key={social} className="px-6 py-2 border border-gray-200 rounded-full font-black text-[10px] tracking-widest hover:bg-black hover:text-white transition-all uppercase">
-                                        {social}
-                                    </button>
-                                ))}
-                            </div>
-                            <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">© 2025 ANTIGRAVITY_TRAVEL_AGENT</p>
-                        </div>
-                    </footer>
+
                 </motion.div>
             </div>
             {/* Custom Subscription Notification */}

@@ -61,16 +61,16 @@ const Features = () => {
             ),
         },
         {
-            title: "Premium Travel Concierge",
-            description: "Experience luxury travel redefined. Our elite concierge service provides 24/7 support, exclusive access to premium experiences, and personalized assistance throughout your journey.",
+            title: "Premium Travel ZYVOX AI",
+            description: "Experience luxury travel redefined. Our elite ZYVOX AI service provides 24/7 support, exclusive access to premium experiences, and personalized assistance throughout your journey.",
             content: (
                 <div className="h-full w-full relative group">
-                    <img src="/assets/features/wp4782898.jpg" alt="Premium Concierge" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                    <img src="/assets/features/wp4782898.jpg" alt="Premium ZYVOX AI" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-tr from-black/90 via-black/50 to-transparent flex flex-col items-center justify-center p-6 text-center">
                         <h3 className="text-3xl font-[1000] uppercase tracking-widest text-[#7a78ff] drop-shadow-2xl">VIP Access</h3>
                         <p className="mt-3 text-xs font-black text-white/90 tracking-widest">EXCLUSIVE EXPERIENCES</p>
                         <div className="mt-6 px-4 py-2 border-2 border-white/40 rounded-lg backdrop-blur-sm">
-                            <span className="text-[10px] font-mono text-white">CONCIERGE_ACTIVE_247</span>
+                            <span className="text-[10px] font-mono text-white">ZYVOX_AI_ACTIVE_247</span>
                         </div>
                     </div>
                 </div>
@@ -80,7 +80,7 @@ const Features = () => {
 
     useEffect(() => {
         const ctx = gsap.context(() => {
-            const scrollEnd = "+=3000";
+            const scrollEnd = "+=2000";
 
             // Pin the section
             ScrollTrigger.create({
@@ -223,9 +223,9 @@ const Features = () => {
 
             <div className="w-full max-w-7xl mx-auto px-6 h-full flex flex-col items-center justify-center relative z-10">
                 {/* Header Area */}
-                <div className="text-center mb-8">
-                    <h2 ref={titleRef} className="text-black text-[clamp(3.5rem,7vw,8rem)] font-[1000] uppercase tracking-tighter leading-[0.8]">
-                        THE NEXT <br />
+                <div className="text-center mb-6">
+                    <h2 ref={titleRef} className="text-black text-[clamp(3.5rem,7vw,8rem)] font-[1000] uppercase tracking-tighter leading-[0.8] flex flex-wrap items-center justify-center gap-x-6">
+                        <span>THE NEXT</span>
                         <TextType
                             text={['ERA', 'GEAR', 'PHASE']}
                             className="text-white mix-blend-difference"

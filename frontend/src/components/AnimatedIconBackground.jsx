@@ -119,7 +119,7 @@ const AnimatedIconBackground = () => {
                             <IconComponent
                                 size={44}
                                 strokeWidth={1.4}
-                                className={isBlue ? 'text-[#38bdf8]' : 'text-[#a8a29e]'}
+                                className={isBlue ? 'text-neutral-900/30' : 'text-[#ff6d38]/40'}
                             />
                         </motion.div>
                     );

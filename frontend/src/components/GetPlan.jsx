@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Send, User, Bot, Phone, Video, MoreVertical, Paperclip, Smile, ExternalLink, Shield, Zap, Globe, Clock, CreditCard, CheckCircle2 } from 'lucide-react';
+import { Send, User, Bot, Phone, Video, MoreVertical, Paperclip, Smile, ExternalLink, Shield, Zap, Globe, Clock, CreditCard, CheckCircle2, ArrowLeft } from 'lucide-react';
 import AnimatedIconBackground from './AnimatedIconBackground';
-import { N8N_WEBHOOK_URL, SIGNUP_ENABLED } from '../config';
+import { N8N_WEBHOOK_URL, SIGNUP_ENABLED, WHATSAPP_API_URL, BACKEND_API_URL } from '../config';
 import ResponseRenderer from './ResponseRenderer';
-
-
-
 
 const ChatMessage = ({ text, sender, isBot, time, type, data }) => {
     return (
@@ -16,43 +13,48 @@ const ChatMessage = ({ text, sender, isBot, time, type, data }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className={`flex w-full mb-4 relative z-10 ${isBot ? 'justify-start' : 'justify-end'}`}
         >
-            <div className={`max-w-[85%] relative ${isBot ? 'bg-white text-black rounded-2xl rounded-tl-none border border-black/5' : 'bg-black text-white rounded-2xl rounded-tr-none'} p-4 shadow-sm`}>
+            <div className={`max-w-[85%] relative ${
+                isBot 
+                    ? 'bg-white text-neutral-900 rounded-2xl rounded-tl-none border border-neutral-200/80 shadow-xs' 
+                    : 'bg-[#fff6f2] border border-[#ff6d38]/20 text-neutral-900 rounded-2xl rounded-tr-none shadow-xs'
+                } p-4 shadow-md`}
+            >
                 {type === 'plan' ? (
                     <div className="space-y-4 min-w-[280px]">
                         <div className="flex items-center gap-2 mb-2">
                             <Zap size={16} className="text-[#ff6d38]" />
                             <span className="text-[10px] font-black uppercase tracking-widest text-[#ff6d38]">Plan Generated</span>
                         </div>
-                        <h3 className="font-black text-xl uppercase leading-none">{data.title}</h3>
+                        <h3 className="font-black text-xl uppercase leading-none text-neutral-900">{data.title}</h3>
                         <div className="grid grid-cols-2 gap-2 mt-4">
-                            <div className="bg-gray-50 p-3 rounded-xl border border-black/5">
-                                <p className="text-[8px] font-bold text-gray-400 uppercase">Duration</p>
-                                <p className="text-xs font-black uppercase">{data.duration}</p>
+                            <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-200">
+                                <p className="text-[8px] font-bold text-neutral-500 uppercase">Duration</p>
+                                <p className="text-xs font-black uppercase text-neutral-900">{data.duration}</p>
                             </div>
-                            <div className="bg-gray-50 p-3 rounded-xl border border-black/5">
-                                <p className="text-[8px] font-bold text-gray-400 uppercase">Est. Cost</p>
-                                <p className="text-xs font-black uppercase">{data.cost}</p>
+                            <div className="bg-neutral-50 p-3 rounded-xl border border-neutral-200">
+                                <p className="text-[8px] font-bold text-neutral-500 uppercase">Est. Cost</p>
+                                <p className="text-xs font-black uppercase text-neutral-900">{data.cost}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500">
-                            <CheckCircle2 size={12} className="text-green-500" />
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-neutral-600">
+                            <CheckCircle2 size={12} className="text-[#ff6d38]" />
                             Luxury Stays & VIP Transfers Included
                         </div>
                     </div>
                 ) : type === 'whatsapp' ? (
                     <div className="space-y-4 py-2">
-                        <p className="text-sm font-medium leading-relaxed italic">
+                        <p className="text-sm font-medium leading-relaxed italic text-neutral-800">
                             "Excellent choice. I've synced your final itinerary to our Operations Console."
                         </p>
-                        <div className="bg-[#25D366]/10 p-4 rounded-2xl border-2 border-[#25D366]/20">
-                            <h4 className="font-black text-xs uppercase tracking-widest text-[#25D366] mb-2">Ready for Booking</h4>
-                            <p className="text-[11px] font-bold text-gray-600 mb-4">You need to finalize this on WhatsApp to unlock exclusive member rates.</p>
+                        <div className="bg-[#25D366]/5 p-4 rounded-2xl border border-[#25D366]/25">
+                            <h4 className="font-black text-xs uppercase tracking-widest text-[#1ea74c] mb-2">Ready for Booking</h4>
+                            <p className="text-[11px] font-bold text-neutral-600 mb-4">You need to finalize this on WhatsApp to unlock exclusive member rates.</p>
                             <a
-                                href="https://wa.me/15551382180"
+                                href={WHATSAPP_API_URL}
                                 target="_blank"
-                                className="w-full bg-[#25D366] text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-[#25D366]/20"
+                                className="w-full bg-[#25D366] text-black py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-[#25D366]/20"
                             >
-                                <Phone size={14} fill="white" />
+                                <Phone size={14} fill="black" />
                                 Initiate Booking Flow
                             </a>
                         </div>
@@ -62,7 +64,7 @@ const ChatMessage = ({ text, sender, isBot, time, type, data }) => {
                         <ResponseRenderer text={text} isBot={isBot} />
                     </div>
                 )}
-                <div className="text-[9px] font-bold mt-2 text-gray-400">
+                <div className="text-[9px] font-bold mt-2 opacity-60">
                     {time}
                 </div>
             </div>
@@ -93,7 +95,7 @@ const GetPlan = () => {
                 setIsLoaded(true);
                 setMessages([
                     {
-                        text: `Welcome to Zyvox Concierge, Guest Explorer! 🌍\n\nHow can I assist you today?`,
+                        text: `Welcome to ZYVOX AI, Guest Explorer! 🌍\n\nHow can I assist you today?`,
                         isBot: true,
                         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     }
@@ -113,7 +115,7 @@ const GetPlan = () => {
             const firstName = parsedUser.name ? parsedUser.name.split(' ')[0] : 'Explorer';
             setMessages([
                 {
-                    text: `Welcome to Zyvox Concierge, ${firstName}! 🌍\n\nHow can I assist you today?`,
+                    text: `Welcome to ZYVOX AI, ${firstName}! 🌍\n\nHow can I assist you today?`,
                     isBot: true,
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 }
@@ -131,7 +133,7 @@ const GetPlan = () => {
                 setIsLoaded(true);
                 setMessages([
                     {
-                        text: `Welcome to Zyvox Concierge, Guest Explorer! 🌍\n\nHow can I assist you today?`,
+                        text: `Welcome to ZYVOX AI, Guest Explorer! 🌍\n\nHow can I assist you today?`,
                         isBot: true,
                         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     }
@@ -147,9 +149,9 @@ const GetPlan = () => {
     }, [messages]);
 
     if (!isLoaded) return (
-        <div className="h-screen w-full flex items-center justify-center bg-[#FDF8F3]">
+        <div className="h-screen w-full flex items-center justify-center bg-[#050505] text-white">
             <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-black border-t-[#ff6d38] rounded-full animate-spin"></div>
+                <div className="w-12 h-12 border-4 border-white/10 border-t-[#ff6d38] rounded-full animate-spin"></div>
                 <p className="font-black uppercase tracking-widest text-xs">Synchronizing Neural Links...</p>
             </div>
         </div>
@@ -171,50 +173,32 @@ const GetPlan = () => {
             localStorage.setItem("sessionId", sessionId);
 
             const response = await fetch(
-                N8N_WEBHOOK_URL,
+                `${BACKEND_API_URL}/api/chat/send`,
                 {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json",
-                        "skip_zrok_interstitial": "true"
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        chatInput: userMsg,
-                        sessionId: sessionId
+                        personId: user?.personNo || user?.['Person No'] || "",
+                        sessionId: sessionId,
+                        message: userMsg
                     })
                 }
             );
 
-            const text = await response.text();
-
-            console.log("Response from n8n:");
-            console.log(text);
-            
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (e) {
-                data = text;
+            if (!response.ok) {
+                const errText = await response.text();
+                let errMsg = "Error connecting to AI Assistant.";
+                try {
+                    const errJson = JSON.parse(errText);
+                    errMsg = errJson.message || errMsg;
+                } catch (_) {}
+                throw new Error(errMsg);
             }
 
-            // Handle different possible response formats from n8n
-            let botText = "";
-            if (data && data.output) {
-                botText = data.output;
-            } else if (data && data.text) {
-                botText = data.text;
-            } else if (data && data.message) {
-                botText = data.message;
-            } else if (Array.isArray(data) && data.length > 0) {
-                if (data[0].output) botText = data[0].output;
-                else if (data[0].text) botText = data[0].text;
-                else if (data[0].message) botText = data[0].message;
-                else botText = JSON.stringify(data[0]);
-            } else if (typeof data === 'string' && data.trim() !== '') {
-                botText = data;
-            } else if (data !== undefined && data !== null && data !== "") {
-                botText = JSON.stringify(data);
-            }
+            const data = await response.json();
+            let botText = data.output || "⚠️ Received empty output from the assistant.";
 
             if (!botText.trim()) {
                 botText = "⚠️ Received an empty response from the n8n webhook. Make sure your n8n Webhook node is set to 'Respond: When Last Node Finishes' or uses a 'Respond to Webhook' node.";
@@ -261,41 +245,51 @@ const GetPlan = () => {
     };
 
     return (
-        <div className="flex h-screen bg-[#FDF8F3] overflow-hidden">
+        <div className="flex h-screen bg-neutral-100 text-neutral-900 overflow-hidden relative">
+            {/* Subtle background glow blobs */}
+            <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#ff6d38]/5 rounded-full blur-[100px] pointer-events-none" />
+            
             {/* Left Side - AI Chatbot */}
-            <div className="w-full lg:w-[60%] flex flex-col bg-white border-r-2 border-black/5">
+            <div className="w-full lg:w-[60%] flex flex-col bg-white border-r border-neutral-200 relative z-10">
                 {/* Header */}
-                <div className="p-6 border-b border-black/5 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#ff6d38] rounded-2xl flex items-center justify-center border-2 border-black">
+                <div className="p-6 border-b border-neutral-200 flex items-center justify-between bg-white/80 backdrop-blur-md">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => navigate('/')}
+                            className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl hover:bg-neutral-100 transition-all flex items-center justify-center text-neutral-600 hover:text-neutral-900 cursor-pointer mr-2 active:scale-95"
+                            title="Back to Landing Page"
+                        >
+                            <ArrowLeft size={16} />
+                        </button>
+                        <div className="w-12 h-12 bg-[#ff6d38] rounded-2xl flex items-center justify-center border-2 border-[#ff6d38]">
                             <Bot size={24} className="text-black" />
                         </div>
                         <div>
-                            <h2 className="font-black text-xl uppercase tracking-tighter text-black">Zyvox AI Agent</h2>
+                            <h2 className="font-black text-xl uppercase tracking-tighter text-neutral-900">Zyvox AI Agent</h2>
                             <div className="flex items-center gap-2">
                                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Available</span>
+                                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Available</span>
                             </div>
                         </div>
                     </div>
                     {user && (
-                        <div className="flex items-center gap-3 bg-gray-50 border border-black/5 px-4 py-2 rounded-2xl">
+                        <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-200 px-4 py-2 rounded-2xl">
                             {user.picture ? (
-                                <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full border border-black/10 object-cover" />
+                                <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full border border-neutral-200 object-cover" />
                             ) : (
-                                <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center font-bold text-xs">
-                                    {user.name ? user.name[0] : 'U'}
+                                <div className="w-8 h-8 bg-[#ff6d38] text-black rounded-full flex items-center justify-center font-black text-xs border border-[#ff6d38]">
+                                    {user.name ? user.name[0].toUpperCase() : 'U'}
                                 </div>
                             )}
                             <div className="hidden sm:block text-left">
-                                <p className="text-xs font-black uppercase tracking-tight leading-none mb-0.5">{user.name}</p>
+                                <p className="text-xs font-black uppercase tracking-tight leading-none mb-0.5 text-neutral-900">{user.name}</p>
                                 <button 
                                     type="button"
                                     onClick={() => {
                                         localStorage.removeItem('zyvox_user');
                                         navigate('/signup');
                                     }}
-                                    className="text-[9px] font-bold text-red-500 uppercase tracking-wider hover:underline bg-transparent border-none p-0 cursor-pointer"
+                                    className="text-[9px] font-black text-[#ff6d38] uppercase tracking-wider hover:underline bg-transparent border-none p-0 cursor-pointer"
                                 >
                                     Log Out
                                 </button>
@@ -305,8 +299,10 @@ const GetPlan = () => {
                 </div>
 
                 {/* Messages Area */}
-                <div className="flex-1 relative bg-[#FDF8F3]">
-                    <AnimatedIconBackground />
+                <div className="flex-1 relative bg-[#fbfbfb]">
+                    <div className="opacity-20 absolute inset-0 pointer-events-none">
+                        <AnimatedIconBackground />
+                    </div>
                     <div className="absolute inset-0 overflow-y-auto p-8 no-scrollbar">
                         <AnimatePresence>
                             {messages.map((msg, idx) => (
@@ -318,18 +314,22 @@ const GetPlan = () => {
                 </div>
 
                 {/* Input Bar */}
-                <form onSubmit={handleSend} className="p-6 bg-white border-t border-black/5 flex gap-4">
+                <form onSubmit={handleSend} className="p-6 bg-white border-t border-neutral-200 flex gap-4">
                     <input
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         placeholder="Type your message..."
-                        className="flex-1 bg-gray-50 border-2 border-transparent focus:border-black rounded-2xl px-6 py-4 font-bold text-sm text-black outline-none transition-all placeholder:text-gray-400"
+                        className="flex-1 bg-neutral-50 border border-neutral-200 focus:border-[#ff6d38] focus:bg-white rounded-2xl px-6 py-4 font-bold text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400"
                     />
                     <button
                         type="submit"
                         disabled={isPlanCreated}
-                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isPlanCreated ? 'bg-gray-100 cursor-not-allowed text-gray-300' : 'bg-black text-white hover:scale-105 active:scale-95'}`}
+                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
+                            isPlanCreated 
+                                ? 'bg-neutral-200 cursor-not-allowed text-neutral-400' 
+                                : 'bg-[#ff6d38] text-white hover:scale-105 active:scale-95 shadow-lg shadow-[#ff6d38]/15 hover:bg-[#e0531b]'
+                        }`}
                     >
                         <Send size={24} />
                     </button>
@@ -337,52 +337,41 @@ const GetPlan = () => {
             </div>
 
             {/* Right Side - WhatsApp Redirect */}
-            <div className="hidden lg:flex flex-col flex-1 items-center justify-center p-12 bg-[#F8F6E9] relative">
-                <div className="absolute top-20 right-20 w-64 h-64 bg-[#ff6d38]/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-20 left-20 w-48 h-48 bg-black/5 rounded-full blur-2xl" />
+            <div className="hidden lg:flex flex-col flex-1 items-center justify-center p-12 bg-neutral-50 border-l border-neutral-200 relative">
+                <div className="absolute top-20 right-20 w-64 h-64 bg-[#ff6d38]/3 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-20 left-20 w-48 h-48 bg-neutral-200/20 rounded-full blur-2xl pointer-events-none" />
 
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="max-w-md text-center"
+                    className="max-w-md text-center z-10"
                 >
                     <div className="w-24 h-24 bg-[#25D366] rounded-[35%] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-[#25D366]/20">
-                        <Phone size={48} className="text-white" />
+                        <Phone size={48} className="text-black" fill="black" />
                     </div>
 
-                    <h2 className="text-5xl font-black uppercase tracking-tighter leading-none mb-6 text-black">
+                    <h2 className="text-5xl font-black uppercase tracking-tighter leading-none mb-6 text-neutral-900">
                         Take it to <br /> <span className="text-[#25D366]">WhatsApp</span>
                     </h2>
 
-                    <p className="text-sm font-bold text-gray-500 mb-10 leading-relaxed">
+                    <p className="text-sm font-bold text-neutral-600 mb-10 leading-relaxed">
                         Ready to book? Chat with our live agents on WhatsApp for instant confirmation and exclusive mobile-only deals.
                     </p>
 
                     <a
-                        href="https://wa.me/15551382180"
+                        href={WHATSAPP_API_URL}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group relative inline-flex items-center gap-4 bg-black text-white px-10 py-6 rounded-full font-black uppercase tracking-widest text-xs overflow-hidden shadow-[8px_8px_0px_#25D366] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none"
+                        className="group relative inline-flex items-center gap-4 bg-neutral-900 text-white px-10 py-6 rounded-full font-black uppercase tracking-widest text-xs overflow-hidden shadow-[8px_8px_0px_#ff6d38] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] active:translate-x-[0px] active:translate-y-[0px] active:shadow-none"
                     >
                         <span>Open WhatsApp Bot</span>
                         <ExternalLink size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                     </a>
-
-                    <div className="mt-12 flex items-center justify-center gap-8 opacity-20">
-                        <div className="flex flex-col items-center">
-                            <Video size={20} className="text-black" />
-                            <span className="text-[8px] font-black mt-1 uppercase tracking-widest text-black">Video Call</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                            <MoreVertical size={20} className="text-black" />
-                            <span className="text-[8px] font-black mt-1 uppercase tracking-widest text-black">More Tools</span>
-                        </div>
-                    </div>
                 </motion.div>
 
-                <div className="absolute bottom-10 text-[10px] font-black uppercase tracking-[0.5em] opacity-30 text-black">
-                    Zyvox Official Mobile Concierge
+                <div className="absolute bottom-10 text-[10px] font-black uppercase tracking-[0.5em] opacity-35 text-neutral-900 z-10">
+                    ZYVOX AI Official Mobile Agent
                 </div>
             </div>
         </div>

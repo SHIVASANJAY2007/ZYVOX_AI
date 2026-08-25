@@ -37,30 +37,32 @@ export const StickyScrollReveal = ({
                 msOverflowStyle: 'none',
             }}
         >
-            <div className="relative flex items-start px-4">
-                <div className="max-w-xl">
+            <div className="relative flex items-start px-4 text-left w-full">
+                <div className="max-w-md w-full">
                     {content.map((item, index) => (
-                        <div key={item.title + index} className="my-40 first:mt-20 last:mb-60">
+                        <div key={item.title + index} className="my-36 first:mt-16 last:mb-48 text-left w-full">
                             <motion.h2
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{
-                                    opacity: activeCard === index ? 1 : 0.2,
+                                    opacity: activeCard === index ? 1 : 0.35,
                                     x: activeCard === index ? 0 : -20,
-                                    scale: activeCard === index ? 1.05 : 1,
+                                    scale: activeCard === index ? 1.02 : 1,
                                 }}
                                 transition={{ duration: 0.5, ease: "circOut" }}
-                                className="text-4xl md:text-5xl font-black text-black uppercase tracking-tighter leading-none"
+                                className="text-4xl md:text-5xl font-black text-black uppercase tracking-tighter leading-none text-left w-full"
+                                style={{ color: '#000000' }}
                             >
                                 {item.title}
                             </motion.h2>
                             <motion.p
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{
-                                    opacity: activeCard === index ? 1 : 0.1,
+                                    opacity: activeCard === index ? 0.85 : 0.25,
                                     y: activeCard === index ? 0 : 10,
                                 }}
                                 transition={{ duration: 0.5, ease: "circOut", delay: 0.1 }}
-                                className="text-xl text-black font-bold max-w-sm mt-8 leading-tight"
+                                className="text-lg md:text-xl text-neutral-900 font-semibold max-w-md mt-4 leading-relaxed text-left w-full"
+                                style={{ color: '#171717' }}
                             >
                                 {item.description}
                             </motion.p>
@@ -75,7 +77,7 @@ export const StickyScrollReveal = ({
             </div>
 
             {/* Desktop Sticky Visuals */}
-            <div className="hidden lg:flex items-center justify-center sticky top-0 h-full w-[500px]">
+            <div className="hidden lg:flex items-center justify-center sticky top-0 h-full w-[400px] flex-shrink-0">
                 <div
                     className={`h-[450px] w-full rounded-[40px] bg-white overflow-hidden border-[6px] border-black shadow-[20px_20px_0px_#000] relative ${contentClassName}`}
                 >
