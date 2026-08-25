@@ -18,21 +18,33 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Initialize Database on Startup
-initDb()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+// Start Server Listening Immediately (Crucial for Render Port Binding)
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  
+  // Initialize Database in background
+  initDb()
+    .then(() => {
+      console.log("Database connection & initialization completed successfully.");
+    })
+    .catch((err) => {
+      console.error("Database initialization failed asynchronously on startup:", err.message);
+      console.log("Server will remain running. Database connections will retry on request.");
     });
-  })
-  .catch((err) => {
-    console.error("Failed to start server due to database error:", err.message);
-    process.exit(1);
-  });
+});
 
 // ==========================================
 // API ROUTES MOUNTING
 // ==========================================
+
+// Render Fast Health Check
+app.get('/healthz', (req, res) => {
+  res.status(200).json({
+    success: true,
+    status: 'healthy',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Health Check Endpoint
 app.get('/api/health', async (req, res, next) => {

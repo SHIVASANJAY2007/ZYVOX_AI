@@ -22,6 +22,9 @@ if (!connectionString) {
 
 const pool = new Pool({
   connectionString,
+  ssl: connectionString && !connectionString.includes('localhost') && !connectionString.includes('127.0.0.1')
+    ? { rejectUnauthorized: false }
+    : false
 });
 
 // Test connection and initialize tables
