@@ -1,12 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Send, User, Bot, Phone, Video, MoreVertical, Paperclip, Smile, ExternalLink, Shield, Zap, Globe, Clock, CreditCard, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Send, User, Bot, Phone, Video, MoreVertical, Paperclip, Smile, ExternalLink, Shield, Zap, Globe, Clock, CreditCard, CheckCircle2, ArrowLeft, Download } from 'lucide-react';
 import AnimatedIconBackground from './AnimatedIconBackground';
 import { N8N_WEBHOOK_URL, SIGNUP_ENABLED, WHATSAPP_API_URL, BACKEND_API_URL } from '../config';
 import ResponseRenderer from './ResponseRenderer';
+import { downloadSingleReplyPDF, downloadFullChatPDF } from '../utils/pdfGenerator';
 
-const ChatMessage = ({ text, sender, isBot, time, type, data }) => {
+const ChatMessage = ({ text, sender, isBot, time, type, data, userName, messages }) => {
+    const handleDownloadPDF = () => {
+        let pdfText = text || '';
+        if (type === 'plan' && data) {
+            pdfText = `### ${data.title}\n- **Duration**: ${data.duration}\n- **Estimated Cost**: ${data.cost}\n\nLuxury Stays & VIP Transfers Included.`;
+        } else if (type === 'whatsapp') {
+            pdfText = `Excellent choice. I've synced your final itinerary to our Operations Console. Ready for WhatsApp member rates booking flow.`;
+        }
+        downloadSingleReplyPDF(pdfText, userName, messages);
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -64,8 +75,21 @@ const ChatMessage = ({ text, sender, isBot, time, type, data }) => {
                         <ResponseRenderer text={text} isBot={isBot} />
                     </div>
                 )}
-                <div className="text-[9px] font-bold mt-2 opacity-60">
-                    {time}
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100/50">
+                    <span className="text-[9px] font-bold opacity-60">
+                        {time}
+                    </span>
+                    {isBot && (
+                        <button
+                            type="button"
+                            onClick={handleDownloadPDF}
+                            className="flex items-center gap-1 text-[9px] font-black text-[#ff6d38] hover:text-[#e0531b] uppercase tracking-wider cursor-pointer transition-colors"
+                            title="Download this response as PDF"
+                        >
+                            <Download size={10} />
+                            <span>PDF</span>
+                        </button>
+                    )}
                 </div>
             </div>
         </motion.div>
@@ -272,30 +296,44 @@ const GetPlan = () => {
                             </div>
                         </div>
                     </div>
-                    {user && (
-                        <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-200 px-4 py-2 rounded-2xl">
-                            {user.picture ? (
-                                <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full border border-neutral-200 object-cover" />
-                            ) : (
-                                <div className="w-8 h-8 bg-[#ff6d38] text-black rounded-full flex items-center justify-center font-black text-xs border border-[#ff6d38]">
-                                    {user.name ? user.name[0].toUpperCase() : 'U'}
+                    <div className="flex items-center gap-3">
+                        {messages.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => downloadFullChatPDF(messages, user?.name || 'Explorer')}
+                                className="flex items-center gap-2 bg-[#ff6d38]/10 hover:bg-[#ff6d38]/20 border border-[#ff6d38]/30 px-3 py-2 rounded-xl text-[10px] font-black text-[#ff6d38] uppercase tracking-wider transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                                title="Download Full Chat History"
+                            >
+                                <Download size={13} />
+                                <span className="hidden sm:inline">Download Chat</span>
+                            </button>
+                        )}
+                        
+                        {user && (
+                            <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-200 px-4 py-2 rounded-2xl">
+                                {user.picture ? (
+                                    <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full border border-neutral-200 object-cover" />
+                                ) : (
+                                    <div className="w-8 h-8 bg-[#ff6d38] text-black rounded-full flex items-center justify-center font-black text-xs border border-[#ff6d38]">
+                                        {user.name ? user.name[0].toUpperCase() : 'U'}
+                                    </div>
+                                )}
+                                <div className="hidden sm:block text-left">
+                                    <p className="text-xs font-black uppercase tracking-tight leading-none mb-0.5 text-neutral-900">{user.name}</p>
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            localStorage.removeItem('zyvox_user');
+                                            navigate('/signup');
+                                        }}
+                                        className="text-[9px] font-black text-[#ff6d38] uppercase tracking-wider hover:underline bg-transparent border-none p-0 cursor-pointer"
+                                    >
+                                        Log Out
+                                    </button>
                                 </div>
-                            )}
-                            <div className="hidden sm:block text-left">
-                                <p className="text-xs font-black uppercase tracking-tight leading-none mb-0.5 text-neutral-900">{user.name}</p>
-                                <button 
-                                    type="button"
-                                    onClick={() => {
-                                        localStorage.removeItem('zyvox_user');
-                                        navigate('/signup');
-                                    }}
-                                    className="text-[9px] font-black text-[#ff6d38] uppercase tracking-wider hover:underline bg-transparent border-none p-0 cursor-pointer"
-                                >
-                                    Log Out
-                                </button>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
 
                 {/* Messages Area */}
@@ -306,7 +344,11 @@ const GetPlan = () => {
                     <div className="absolute inset-0 overflow-y-auto p-8 no-scrollbar">
                         <AnimatePresence>
                             {messages.map((msg, idx) => (
-                                <ChatMessage key={idx} {...msg} />
+                                <ChatMessage 
+                                    key={idx} 
+                                    {...msg} 
+                                    userName={user?.name || 'Explorer'} 
+                                />
                             ))}
                         </AnimatePresence>
                         <div ref={chatEndRef} className="relative z-10" />
