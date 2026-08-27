@@ -3,5 +3,6 @@ export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "150917
 export const GOOGLE_SHEET_DATABASE_URL = import.meta.env.VITE_GOOGLE_SHEET_DATABASE_URL || "";
 export const GOOGLE_SHEETS_API = import.meta.env.VITE_GOOGLE_SHEETS_API || "https://script.google.com/macros/s/AKfycbyl07LY7R5iX-unDSZvUx7nuXC_aLgh9MlDztL0M6eKGEs0n30HochI4VAk-JxU3FSozw/exec";
 export const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL || "http://localhost:5000";
-export const WHATSAPP_API_URL = import.meta.env.VITE_WHATSAPP_API_URL || "https://0vjqkft2kvk9.shares.zrok.io";
+export const WHATSAPP_API_URL = import.meta.env.VITE_WHATSAPP_API_URL || "https://wa.me/918110925108";
+export const TELEGRAM_API_URL = import.meta.env.VITE_TELEGRAM_API_URL || "https://t.me/ZaivoxBot";
 export const SIGNUP_ENABLED = true;

@@ -849,7 +849,6 @@ const PexelsMediaBlock = ({ query }) => {
 // ==========================================
 const dayHeaderRegex = /^(?:#+\s+|\*\*|)\b(Day\s+\d+|DAY\s+\d+)\b(?:\s*[:\-]\s*|\s+)(.*?)(?:\*\*|)$/i;
 const timeSegmentRegex = /^\s*[\-\*\d\.\+\s]*\*\*?(Morning|Afternoon|Evening|Night)(?:\s*\([^)]+\))?\*\*?:?\s*(.*?)\s*$/i;
-const overviewFieldRegex = /^\s*[\-\*\d\.\+\s]*\*\*?(Destination|Location|Duration|Days|Dates|Budget|Est\.\s+Cost|Cost|Estimated\s+Budget|Estimated\s+Cost|Travel\s+method|Transport|Accommodation|Stay|Hotel)\*\*?:\s*(.*?)\s*$/i;
 const calloutRegex = /^(?:💡|⚠️|🚨|ℹ️|🛑|📌|👉)?\s*\*\*?(Tip|Warning|Important|Note|Remember|Caution|Alert|Success|Info)\*\*?\s*:\s*(.*?)$/i;
 const planHeaderRegex = /^(?:#+\s+|\*\*|)\b(Plan\s+\d+|Option\s+[A-Z])\b(?:\s*[:\-]\s*|\s+)(.*?)(?:\*\*|)$/i;
 const sourcesHeaderRegex = /^(?:#+\s+|\*\*|)(Sources|References|Citations)(?:\s*[:\-]\s*|\s*)(?:\*\*|)$/i;
@@ -903,7 +902,6 @@ const parseSubBlocks = (lines) => {
 
     let currentDay = null;
     let currentSegment = null;
-    let overviewFields = null;
     let sourceLinks = null;
     
     for (let i = 0; i < lines.length; i++) {
@@ -953,22 +951,7 @@ const parseSubBlocks = (lines) => {
             continue;
         }
         
-        // 3. Check Overview Field
-        const overviewMatch = line.match(overviewFieldRegex);
-        if (overviewMatch) {
-            if (!overviewFields) {
-                flushMarkdown();
-                overviewFields = {};
-            }
-            const key = overviewMatch[1].toLowerCase().replace(/\s+/g, '');
-            const val = overviewMatch[2];
-            overviewFields[key] = val;
-            continue;
-        } else if (overviewFields && line.trim() !== '') {
-            // Close the overview card when hitting a non-matching line
-            blocks.push({ type: 'overview', fields: overviewFields });
-            overviewFields = null;
-        }
+
         
         // 4. Check Callout Line
         const calloutMatch = line.match(calloutRegex);
@@ -1047,9 +1030,7 @@ const parseSubBlocks = (lines) => {
     if (currentDay) {
         blocks.push({ type: 'day', day: currentDay });
     }
-    if (overviewFields) {
-        blocks.push({ type: 'overview', fields: overviewFields });
-    }
+
     if (sourceLinks) {
         blocks.push({ type: 'sources', items: sourceLinks });
     }
@@ -1297,19 +1278,8 @@ const parseBotMessageToBlocks = (text) => {
             
             const enrichmentBlocks = [
                 {
-                    type: 'callout',
-                    style: 'success',
-                    title: `✨ ZYVOX AI Featured Spotlights: ${enrichment.name}`,
-                    text: `Below is a curated preview of tourist highlights, video guides, and direct reservation lines for your trip.`
-                },
-                {
                     type: 'cards',
                     items: enrichment.places
-                },
-                {
-                    type: 'media',
-                    mediaType: 'video',
-                    url: enrichment.videoUrl
                 },
                 {
                     type: 'buttons',
@@ -1618,7 +1588,29 @@ const preprocessBotReplyText = (text) => {
         return currentLine;
     });
     
-    return processedLines.join('\n');
+    // Eliminate consecutive horizontal rule lines
+    let filteredLines = [];
+    let lastWasHr = false;
+    for (let i = 0; i < processedLines.length; i++) {
+        const line = processedLines[i];
+        const trimmed = line.trim();
+        if (trimmed === '') {
+            filteredLines.push(line);
+            continue;
+        }
+        // Match standard markdown horizontal rules: 3 or more dashes, asterisks, or underscores
+        if (/^\s*([-*_])\s*(?:\1\s*){2,}\s*$/.test(line)) {
+            if (lastWasHr) {
+                continue; // Skip this line if the previous non-empty line was also an hr
+            }
+            lastWasHr = true;
+        } else {
+            lastWasHr = false;
+        }
+        filteredLines.push(line);
+    }
+    
+    return filteredLines.join('\n');
 };
 
 // ==========================================

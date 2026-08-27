@@ -16,35 +16,35 @@ const Hero = () => {
             title: "Planner",
             description: "AI Itineraries",
             color: "bg-[#7c7fff]",
-            icon: "🎵",
+            icon: "🗺️",
             shape: "rounded-full"
         },
         {
             title: "Budget",
             description: "Smart Tracking",
             color: "bg-[#00a859]",
-            icon: "🎬",
+            icon: "📊",
             shape: "rounded-[40px]"
         },
         {
             title: "Support",
             description: "24/7 Agent",
             color: "bg-[#ff6d38]",
-            icon: "👻",
+            icon: "💬",
             shape: "rounded-[40px] rounded-r-[100px]"
         },
         {
             title: "Gems",
             description: "Hidden Places",
             color: "bg-[#ffc107]",
-            icon: "🛍️",
+            icon: "💎",
             shape: "rounded-[40px]"
         },
         {
             title: "Booking",
             description: "Seamless",
             color: "bg-[#4a90e2]",
-            icon: "👕",
+            icon: "🎫",
             shape: "rounded-full"
         }
     ];
@@ -65,8 +65,8 @@ const Hero = () => {
                 scrollTrigger: {
                     trigger: containerRef.current,
                     start: "top top",
-                    end: "+=2000",
-                    scrub: 1,
+                    end: "+=1800", // Snug screen lock duration
+                    scrub: 0.5, // Snappier catch-up so animations finish before release
                     pin: true,
                     anticipatePin: 1
                 }
@@ -102,6 +102,9 @@ const Hero = () => {
                     }, ">-0.5");
             });
 
+            // 3. Add timeline pause to let scrub catch up completely before releasing pin
+            tl.to({}, { duration: 1.5 });
+
         }, containerRef);
 
         return () => ctx.revert();
@@ -115,8 +118,8 @@ const Hero = () => {
             {/* Optional subtle grid - although Spotlight has one, adding a custom overlay for depth */}
             <div className="absolute inset-0 h-full w-full bg-grid-white/[0.02] pointer-events-none z-0"></div>
 
-            <div className="flex flex-col items-center w-full max-w-6xl mx-auto z-10 py-10">
-                <div ref={headerRef} className="hero-content text-center mb-12 mt-10">
+            <div className="flex flex-col items-center w-full max-w-6xl mx-auto z-10 py-4">
+                <div ref={headerRef} className="hero-content text-center mb-6 mt-4">
                     <h1 className="hero-title text-7xl md:text-[8rem] font-bold mb-4 tracking-tighter leading-[0.9] uppercase flex flex-col items-center">
                         <EncryptedText
                             text="Your travel"
@@ -141,7 +144,7 @@ const Hero = () => {
                         <div
                             key={index}
                             ref={el => cardsRef.current[index] = el}
-                            className={`${card.color} ${card.shape} hero-card w-[180px] h-[180px] p-4 flex flex-col justify-center items-center text-black relative group overflow-hidden transition-all duration-300 hover:scale-110 animate-blinking`}
+                            className={`${card.color} ${card.shape} hero-card w-[140px] h-[140px] sm:w-[160px] sm:h-[160px] md:w-[180px] md:h-[180px] p-3 md:p-4 flex flex-col justify-center items-center text-black relative group overflow-hidden transition-all duration-300 hover:scale-110 animate-blinking`}
                             style={{ animationDelay: `${index * 0.5}s` }}
                         >
                             <div className="text-5xl mb-3 group-hover:scale-125 transition-transform duration-500">{card.icon}</div>

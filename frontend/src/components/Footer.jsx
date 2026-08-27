@@ -3,6 +3,79 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom';
 import { User, Plane, Globe, Activity, ArrowRight, Layout, Link as LinkIcon, Check, Bell } from 'lucide-react';
 
+const InteractiveLogo = () => {
+    const containerRef = useRef(null);
+    const [mousePos, setMousePos] = useState({ x: '50%', y: '50%' });
+    const [rotate, setRotate] = useState({ x: 0, y: 0 });
+    const [isHovered, setIsHovered] = useState(false);
+
+    const handleMouseMove = (e) => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        
+        // Spotlight mask position
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        setMousePos({ x: `${x}%`, y: `${y}%` });
+
+        // 3D tilt rotation offsets (limit to +/- 12 degrees max tilt)
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const tiltLimit = 12;
+        
+        const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * tiltLimit;
+        const rotateX = -((e.clientY - centerY) / (rect.height / 2)) * tiltLimit;
+        
+        setRotate({ x: rotateX, y: rotateY });
+    };
+
+    const handleMouseLeave = () => {
+        setIsHovered(false);
+        setRotate({ x: 0, y: 0 }); // Smoothly reset tilt angle on mouse leave
+    };
+
+    return (
+        <div 
+            ref={containerRef}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={handleMouseLeave}
+            className="relative w-52 h-52 mx-auto my-4 overflow-hidden rounded-[20%] flex items-center justify-center bg-black/10 select-none border border-white/10 shadow-inner transition-transform duration-200 ease-out cursor-pointer"
+            style={{
+                perspective: '1000px',
+                transform: `perspective(1000px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) scale(${isHovered ? 1.05 : 1})`,
+                transformStyle: 'preserve-3d'
+            }}
+        >
+            {/* Base blurred logo */}
+            <img 
+                src="/assets/zyvox_logo.jpeg" 
+                alt="Zyvox AI Blurred Logo" 
+                className="w-full h-full object-contain transition-all duration-300 filter blur-[8px] opacity-40 scale-95"
+                style={{ transform: 'translateZ(20px)' }}
+            />
+            
+            {/* Top clear logo, revealed only around cursor */}
+            <div 
+                className="absolute inset-0 transition-opacity duration-300 pointer-events-none flex items-center justify-center"
+                style={{ 
+                    opacity: isHovered ? 1 : 0,
+                    WebkitMaskImage: `radial-gradient(circle 50px at ${mousePos.x} ${mousePos.y}, black 100%, transparent 100%)`,
+                    maskImage: `radial-gradient(circle 50px at ${mousePos.x} ${mousePos.y}, black 100%, transparent 100%)`,
+                    transform: 'translateZ(40px)' // parallax layer offset
+                }}
+            >
+                <img 
+                    src="/assets/zyvox_logo.jpeg" 
+                    alt="Zyvox AI Clear Logo" 
+                    className="w-full h-full object-contain scale-95"
+                />
+            </div>
+        </div>
+    );
+};
+
+
 const Footer = () => {
     const containerRef = useRef(null);
     const [showNotification, setShowNotification] = useState(false);
@@ -22,6 +95,7 @@ const Footer = () => {
     // 1. Text Scaling & Opacity (Exact Template Ranges)
     const textScale = useTransform(scrollYProgress, [0, 0.4], [1, 12]);
     const textOpacity = useTransform(scrollYProgress, [0.35, 0.45], [1, 0]);
+    const textDisplay = useTransform(scrollYProgress, [0, 0.45, 0.46], ["flex", "flex", "none"]);
 
     // 2. Floating Badges Parallax (Exact Template Ranges)
     const badgeY1 = useTransform(scrollYProgress, [0, 0.4], [0, -200]);
@@ -35,6 +109,7 @@ const Footer = () => {
     // 4. Content Reveal (Exact Template Ranges)
     const contentOpacity = useTransform(scrollYProgress, [0.7, 0.9], [0, 1]);
     const contentY = useTransform(scrollYProgress, [0.7, 0.9], [100, 0]);
+    const contentDisplay = useTransform(scrollYProgress, [0, 0.69, 0.7], ["none", "none", "flex"]);
 
     return (
         <div ref={containerRef} className="relative bg-black h-[500vh] w-full">
@@ -43,7 +118,7 @@ const Footer = () => {
 
                 {/* HERO SECTION: Text and Badges */}
                 <motion.div
-                    style={{ scale: textScale, opacity: textOpacity }}
+                    style={{ scale: textScale, opacity: textOpacity, display: textDisplay }}
                     className="relative z-10 flex flex-col items-center text-center px-4"
                 >
                     <h1 className="text-white text-7xl md:text-9xl font-black uppercase tracking-tighter leading-[0.85]">
@@ -64,7 +139,7 @@ const Footer = () => {
 
                 {/* Subtext (Static until fade) */}
                 <motion.p
-                    style={{ opacity: textOpacity }}
+                    style={{ opacity: textOpacity, display: textDisplay }}
                     className="absolute bottom-10 max-w-md text-center text-gray-400 text-sm z-10 uppercase tracking-widest font-black"
                 >
                     Join a community building the next era of <br /> autonomous travel experiences.
@@ -88,7 +163,7 @@ const Footer = () => {
 
                 {/* FINAL CONTENT SECTION */}
                 <motion.div
-                    style={{ opacity: contentOpacity, y: contentY }}
+                    style={{ opacity: contentOpacity, y: contentY, display: contentDisplay }}
                     className="absolute inset-0 z-30 bg-white flex flex-col p-6 md:p-12 overflow-y-auto no-scrollbar"
                 >
                     <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch max-w-7xl mx-auto w-full">
@@ -107,6 +182,9 @@ const Footer = () => {
                                 <h2 className="text-5xl md:text-7xl font-bold mb-4 tracking-tighter leading-none">Ready to <br /> Depart?</h2>
                                 <p className="text-indigo-100 font-medium text-lg">Join the community of travelers reshaping global exploration with AI precision.</p>
                             </div>
+                            
+                            <InteractiveLogo />
+
                             <Link to="/get-plan" className="mt-8 bg-black text-white rounded-full py-4 px-8 flex items-center justify-between font-bold group hover:bg-[#D94827] transition-all duration-300">
                                 <span className="flex items-center gap-4">
                                     <User className="bg-white/10 rounded-full p-2" size={32} />

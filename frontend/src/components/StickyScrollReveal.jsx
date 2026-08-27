@@ -44,7 +44,7 @@ export const StickyScrollReveal = ({
                             <motion.h2
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{
-                                    opacity: activeCard === index ? 1 : 0.35,
+                                    opacity: activeCard === index ? 1 : 0.7,
                                     x: activeCard === index ? 0 : -20,
                                     scale: activeCard === index ? 1.02 : 1,
                                 }}
@@ -57,7 +57,7 @@ export const StickyScrollReveal = ({
                             <motion.p
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{
-                                    opacity: activeCard === index ? 0.85 : 0.25,
+                                    opacity: activeCard === index ? 0.9 : 0.65,
                                     y: activeCard === index ? 0 : 10,
                                 }}
                                 transition={{ duration: 0.5, ease: "circOut", delay: 0.1 }}
