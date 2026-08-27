@@ -22,7 +22,7 @@ const TelegramIcon = ({ className }) => (
 const isTravelPlan = (text) => {
     if (!text || typeof text !== 'string') return false;
     const lower = text.toLowerCase();
-    
+
     return lower.includes('rough plan') || lower.includes('final plan');
 };
 
@@ -46,20 +46,19 @@ const ChatMessage = ({ text, sender, isBot, time, type, data, userName, messages
     const isPlanFinal = isBot && (normalizedResponseType === 'plan_final' || type === 'plan');
     const isPlan = isPlanRough || isPlanFinal;
 
-    return ( 
+    return (
         <motion.div
             initial={isPlan ? { opacity: 0, y: 30, scale: 0.96 } : { opacity: 0, scale: 0.95, y: 10 }}
             animate={isPlan ? { opacity: 1, y: 0, scale: 1 } : { opacity: 1, scale: 1, y: 0 }}
             transition={isPlan ? { type: "spring", stiffness: 90, damping: 14 } : { duration: 0.2 }}
             className={`flex w-full mb-4 relative z-10 ${isBot ? 'justify-start' : 'justify-end'}`}
         >
-            <div className={`max-w-[85%] relative ${
-                isBot 
+            <div className={`max-w-[85%] relative ${isBot
                     ? isPlanFinal
                         ? 'bg-gradient-to-br from-white via-[#fffaf7] to-[#fff6f0] border-2 border-[#ff6d38]/30 shadow-xl shadow-[#ff6d38]/5 rounded-2xl rounded-tl-none'
                         : isPlanRough
                             ? 'bg-gradient-to-br from-white via-neutral-50/50 to-[#fffbf7]/30 border border-neutral-300 shadow-md shadow-neutral-100/50 rounded-2xl rounded-tl-none'
-                            : 'bg-white text-neutral-900 rounded-2xl rounded-tl-none border border-neutral-200/80 shadow-xs' 
+                            : 'bg-white text-neutral-900 rounded-2xl rounded-tl-none border border-neutral-200/80 shadow-xs'
                     : 'bg-[#fff6f2] border border-[#ff6d38]/20 text-neutral-900 rounded-2xl rounded-tr-none shadow-xs'
                 } p-4 shadow-md`}
             >
@@ -279,11 +278,11 @@ const GetPlan = () => {
 
             if (!response.ok) {
                 const errText = await response.text();
-                let errMsg = "Error connecting to AI Assistant.";
+                let errMsg = "Error connecting to AI Assistant. Contact 7373382999 (Admin) for more Details.";
                 try {
                     const errJson = JSON.parse(errText);
                     errMsg = errJson.message || errMsg;
-                } catch (_) {}
+                } catch (_) { }
                 throw new Error(errMsg);
             }
 
@@ -303,7 +302,7 @@ const GetPlan = () => {
         } catch (error) {
             console.error('Webhook error:', error);
             setMessages(prev => [...prev, {
-                text: "Error connecting to AI Assistant.",
+                text: "Error connecting to AI Assistant. Contact 7373382999 (Admin) for more Details.",
                 isBot: true,
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }]);
@@ -339,7 +338,7 @@ const GetPlan = () => {
         <div className="flex h-screen bg-neutral-100 text-neutral-900 overflow-hidden relative">
             {/* Subtle background glow blobs */}
             <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#ff6d38]/5 rounded-full blur-[100px] pointer-events-none" />
-            
+
             {/* Left Side - AI Chatbot */}
             <div className="w-full lg:w-[60%] flex flex-col bg-white border-r border-neutral-200 relative z-10">
                 {/* Header */}
@@ -389,7 +388,7 @@ const GetPlan = () => {
                                 <span className="hidden sm:inline">Download Chat</span>
                             </button>
                         )}
-                        
+
                         {user && (
                             <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-200 px-4 py-2 rounded-2xl">
                                 {user.picture ? (
@@ -401,7 +400,7 @@ const GetPlan = () => {
                                 )}
                                 <div className="hidden sm:block text-left">
                                     <p className="text-xs font-black uppercase tracking-tight leading-none mb-0.5 text-neutral-900">{user.name}</p>
-                                    <button 
+                                    <button
                                         type="button"
                                         onClick={() => {
                                             localStorage.removeItem('zyvox_user');
@@ -425,10 +424,10 @@ const GetPlan = () => {
                     <div className="absolute inset-0 overflow-y-auto p-8 no-scrollbar">
                         <AnimatePresence>
                             {messages.map((msg, idx) => (
-                                <ChatMessage 
-                                    key={idx} 
-                                    {...msg} 
-                                    userName={user?.name || 'Explorer'} 
+                                <ChatMessage
+                                    key={idx}
+                                    {...msg}
+                                    userName={user?.name || 'Explorer'}
                                     messages={messages}
                                 />
                             ))}
@@ -449,11 +448,10 @@ const GetPlan = () => {
                     <button
                         type="submit"
                         disabled={isPlanCreated}
-                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
-                            isPlanCreated 
-                                ? 'bg-neutral-200 cursor-not-allowed text-neutral-400' 
+                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isPlanCreated
+                                ? 'bg-neutral-200 cursor-not-allowed text-neutral-400'
                                 : 'bg-[#ff6d38] text-white hover:scale-105 active:scale-95 shadow-lg shadow-[#ff6d38]/15 hover:bg-[#e0531b]'
-                        }`}
+                            }`}
                     >
                         <Send size={24} />
                     </button>
@@ -463,10 +461,9 @@ const GetPlan = () => {
             {/* Right Side - Redirection Panel */}
             <div className="hidden lg:flex flex-col flex-1 items-center justify-center p-12 bg-neutral-50 border-l border-neutral-200 relative">
                 {/* Dynamic Background Glow Blobs */}
-                <div 
-                    className={`absolute top-20 right-20 w-64 h-64 rounded-full blur-3xl pointer-events-none transition-colors duration-500 ${
-                        activePlatform === 'whatsapp' ? 'bg-[#25D366]/5' : 'bg-[#0088cc]/5'
-                    }`}
+                <div
+                    className={`absolute top-20 right-20 w-64 h-64 rounded-full blur-3xl pointer-events-none transition-colors duration-500 ${activePlatform === 'whatsapp' ? 'bg-[#25D366]/5' : 'bg-[#0088cc]/5'
+                        }`}
                 />
                 <div className="absolute bottom-20 left-20 w-48 h-48 bg-neutral-200/20 rounded-full blur-2xl pointer-events-none" />
 
@@ -477,11 +474,10 @@ const GetPlan = () => {
                         onClick={() => setActivePlatform('whatsapp')}
                         title="WhatsApp"
                         aria-label="WhatsApp"
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer ${
-                            activePlatform === 'whatsapp'
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer ${activePlatform === 'whatsapp'
                                 ? 'bg-[#25D366] text-white scale-110 shadow-lg shadow-[#25D366]/40 ring-4 ring-[#25D366]/20'
                                 : 'bg-[#25D366] text-white scale-100 opacity-40 hover:opacity-80 hover:scale-105'
-                        }`}
+                            }`}
                     >
                         <WhatsAppIcon className="w-6 h-6" />
                     </button>
@@ -490,11 +486,10 @@ const GetPlan = () => {
                         onClick={() => setActivePlatform('telegram')}
                         title="Telegram"
                         aria-label="Telegram"
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer ${
-                            activePlatform === 'telegram'
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer ${activePlatform === 'telegram'
                                 ? 'bg-[#0088cc] text-white scale-110 shadow-lg shadow-[#0088cc]/40 ring-4 ring-[#0088cc]/20'
                                 : 'bg-[#0088cc] text-white scale-100 opacity-40 hover:opacity-80 hover:scale-105'
-                        }`}
+                            }`}
                     >
                         <TelegramIcon className="w-6 h-6" />
                     </button>
