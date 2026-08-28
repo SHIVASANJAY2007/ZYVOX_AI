@@ -12,9 +12,6 @@ const PricingCard = ({ title, price, features, color, buttonText, isPopular }) =
     return (
         <motion.div
             ref={ref}
-            initial={{ opacity: 0, y: 30 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6 }}
             whileHover={{ y: -10, rotate: isPopular ? 1 : -1 }}
             className={`relative p-8 rounded-[32px] border-[4px] border-black bg-white shadow-[12px_12px_0px_#000] flex flex-col h-full reveal-item ${isPopular ? 'z-10' : 'z-0'}`}
         >

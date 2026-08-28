@@ -5,18 +5,12 @@ import { User, Plane, Globe, Activity, ArrowRight, Layout, Link as LinkIcon, Che
 
 const InteractiveLogo = () => {
     const containerRef = useRef(null);
-    const [mousePos, setMousePos] = useState({ x: '50%', y: '50%' });
     const [rotate, setRotate] = useState({ x: 0, y: 0 });
     const [isHovered, setIsHovered] = useState(false);
 
     const handleMouseMove = (e) => {
         if (!containerRef.current) return;
         const rect = containerRef.current.getBoundingClientRect();
-        
-        // Spotlight mask position
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-        setMousePos({ x: `${x}%`, y: `${y}%` });
 
         // 3D tilt rotation offsets (limit to +/- 12 degrees max tilt)
         const centerX = rect.left + rect.width / 2;
@@ -47,33 +41,16 @@ const InteractiveLogo = () => {
                 transformStyle: 'preserve-3d'
             }}
         >
-            {/* Base blurred logo */}
             <img 
                 src="/assets/zyvox_logo.jpeg" 
-                alt="Zyvox AI Blurred Logo" 
-                className="w-full h-full object-contain transition-all duration-300 filter blur-[8px] opacity-40 scale-95"
-                style={{ transform: 'translateZ(20px)' }}
+                alt="Zyvox AI Logo" 
+                className={`w-full h-full object-contain scale-95 transition-all duration-1000 ${isHovered ? 'grayscale-0' : 'grayscale'}`}
+                style={{ transform: 'translateZ(30px)' }}
             />
-            
-            {/* Top clear logo, revealed only around cursor */}
-            <div 
-                className="absolute inset-0 transition-opacity duration-300 pointer-events-none flex items-center justify-center"
-                style={{ 
-                    opacity: isHovered ? 1 : 0,
-                    WebkitMaskImage: `radial-gradient(circle 50px at ${mousePos.x} ${mousePos.y}, black 100%, transparent 100%)`,
-                    maskImage: `radial-gradient(circle 50px at ${mousePos.x} ${mousePos.y}, black 100%, transparent 100%)`,
-                    transform: 'translateZ(40px)' // parallax layer offset
-                }}
-            >
-                <img 
-                    src="/assets/zyvox_logo.jpeg" 
-                    alt="Zyvox AI Clear Logo" 
-                    className="w-full h-full object-contain scale-95"
-                />
-            </div>
         </div>
     );
 };
+
 
 
 const Footer = () => {

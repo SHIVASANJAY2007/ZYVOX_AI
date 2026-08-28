@@ -12,16 +12,28 @@ const SectionWipe = ({ containerRef }) => {
         offset: ["start end", "start start"]
     });
 
-    // Sweep from -120% to 120% as we scroll into the section
-    const sweepX = useTransform(scrollYProgress, [0, 1], ["-120%", "120%"]);
-    const sweepY = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
+    // Staggered sweeps by mapping offset scroll ranges at the top-level (abides by Rules of Hooks)
+    const sweepX0 = useTransform(scrollYProgress, [0.0, 0.8], ["-120%", "120%"]);
+    const sweepY0 = useTransform(scrollYProgress, [0.0, 0.8], ["-20%", "20%"]);
+
+    const sweepX1 = useTransform(scrollYProgress, [0.05, 0.85], ["-120%", "120%"]);
+    const sweepY1 = useTransform(scrollYProgress, [0.05, 0.85], ["-20%", "20%"]);
+
+    const sweepX2 = useTransform(scrollYProgress, [0.1, 0.9], ["-120%", "120%"]);
+    const sweepY2 = useTransform(scrollYProgress, [0.1, 0.9], ["-20%", "20%"]);
+
+    const sweepX3 = useTransform(scrollYProgress, [0.15, 0.95], ["-120%", "120%"]);
+    const sweepY3 = useTransform(scrollYProgress, [0.15, 0.95], ["-20%", "20%"]);
+
+    const sweepX4 = useTransform(scrollYProgress, [0.2, 1.0], ["-120%", "120%"]);
+    const sweepY4 = useTransform(scrollYProgress, [0.2, 1.0], ["-20%", "20%"]);
 
     const layers = [
-        { color: '#7B61FF' },
-        { color: '#B6FF33' },
-        { color: '#FFC700' },
-        { color: '#A0D7FB' },
-        { color: '#F8F6E9' },
+        { color: '#7B61FF', sweepX: sweepX0, sweepY: sweepY0 },
+        { color: '#B6FF33', sweepX: sweepX1, sweepY: sweepY1 },
+        { color: '#FFC700', sweepX: sweepX2, sweepY: sweepY2 },
+        { color: '#A0D7FB', sweepX: sweepX3, sweepY: sweepY3 },
+        { color: '#F8F6E9', sweepX: sweepX4, sweepY: sweepY4 },
     ];
 
     return (
@@ -30,14 +42,13 @@ const SectionWipe = ({ containerRef }) => {
                 <motion.div
                     key={i}
                     style={{
-                        x: sweepX,
-                        y: sweepY,
+                        x: layer.sweepX,
+                        y: layer.sweepY,
                         backgroundColor: layer.color,
                         clipPath: 'polygon(0% 0%, 85% 0%, 100% 100%, 0% 100%)',
                         zIndex: 100 - i,
                         rotate: -15,
                         scaleY: 1.5,
-                        transition: { delay: i * 0.01 }
                     }}
                     className="absolute inset-0 w-[150vw] h-[120vh] -top-[10vh]"
                 />

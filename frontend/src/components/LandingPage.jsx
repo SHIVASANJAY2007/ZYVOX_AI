@@ -36,6 +36,19 @@ const LandingPage = () => {
         return () => clearTimeout(timer)
     }, [])
 
+    useEffect(() => {
+        if (location.hash) {
+            const id = location.hash.substring(1);
+            const el = document.getElementById(id);
+            if (el) {
+                const timer = setTimeout(() => {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                }, 300);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [location.hash]);
+
     return (
         <>
             <PillNav

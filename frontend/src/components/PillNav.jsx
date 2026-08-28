@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const NavButton = ({ item, isActive, onClick, className, children }) => {
     const isHash = item.href.startsWith('#');
+    const isHomepage = window.location.pathname === '/';
 
     const handleClick = (e) => {
-        if (isHash) {
+        if (isHash && isHomepage) {
             const id = item.href.substring(1);
             const el = document.getElementById(id);
             if (el) {
@@ -18,7 +19,7 @@ const NavButton = ({ item, isActive, onClick, className, children }) => {
         if (onClick) onClick();
     };
 
-    if (isHash) {
+    if (isHash && isHomepage) {
         return (
             <a href={item.href} onClick={handleClick} className={className}>
                 {children}
@@ -26,8 +27,10 @@ const NavButton = ({ item, isActive, onClick, className, children }) => {
         );
     }
 
+    const toPath = isHash ? `/${item.href}` : item.href;
+
     return (
-        <Link to={item.href} onClick={handleClick} className={className}>
+        <Link to={toPath} onClick={handleClick} className={className}>
             {children}
         </Link>
     );

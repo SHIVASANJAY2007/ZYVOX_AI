@@ -458,41 +458,78 @@ const GetPlan = () => {
                 </form>
             </div>
 
-            {/* Right Side - Redirection Panel */}
-            <div className="hidden lg:flex flex-col flex-1 items-center justify-center p-12 bg-neutral-50 border-l border-neutral-200 relative">
+            <div className={`hidden lg:flex flex-col flex-1 items-center justify-center p-12 border-l border-neutral-200 relative transition-colors duration-700 ${
+                activePlatform === 'whatsapp' ? 'bg-[#eefcf3]' : 'bg-[#edf6fd]'
+            }`}>
                 {/* Dynamic Background Glow Blobs */}
                 <div
-                    className={`absolute top-20 right-20 w-64 h-64 rounded-full blur-3xl pointer-events-none transition-colors duration-500 ${activePlatform === 'whatsapp' ? 'bg-[#25D366]/5' : 'bg-[#0088cc]/5'
+                    className={`absolute top-20 right-20 w-64 h-64 rounded-full blur-3xl pointer-events-none transition-colors duration-500 ${activePlatform === 'whatsapp' ? 'bg-[#25D366]/10' : 'bg-[#0088cc]/10'
                         }`}
                 />
-                <div className="absolute bottom-20 left-20 w-48 h-48 bg-neutral-200/20 rounded-full blur-2xl pointer-events-none" />
+                <div
+                    className={`absolute bottom-20 left-20 w-48 h-48 rounded-full blur-2xl pointer-events-none transition-colors duration-500 ${activePlatform === 'whatsapp' ? 'bg-[#25D366]/5' : 'bg-[#0088cc]/5'
+                        }`}
+                />
 
-                {/* Platform Toggle Buttons at the Top */}
-                <div className="absolute top-8 flex items-center gap-4 z-20">
-                    <button
+                {/* Platform Toggle Switcher at the Top */}
+                <div className="absolute top-8 flex items-center bg-white/70 border border-neutral-200/50 p-2 rounded-full shadow-lg backdrop-blur-md z-20 gap-3">
+                    {/* WhatsApp Option */}
+                    <motion.button
+                        layout
                         type="button"
                         onClick={() => setActivePlatform('whatsapp')}
-                        title="WhatsApp"
-                        aria-label="WhatsApp"
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer ${activePlatform === 'whatsapp'
-                                ? 'bg-[#25D366] text-white scale-110 shadow-lg shadow-[#25D366]/40 ring-4 ring-[#25D366]/20'
-                                : 'bg-[#25D366] text-white scale-100 opacity-40 hover:opacity-80 hover:scale-105'
-                            }`}
+                        title="Switch to WhatsApp"
+                        className={`flex items-center justify-center gap-3 h-12 rounded-full cursor-pointer transition-all duration-500 relative border overflow-hidden ${
+                            activePlatform === 'whatsapp'
+                                ? 'bg-[#25D366] border-[#1ebd5b] text-black w-44 shadow-lg shadow-[#25D366]/30'
+                                : 'bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/20 w-12'
+                        }`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 350, damping: 26 }}
                     >
-                        <WhatsAppIcon className="w-6 h-6" />
-                    </button>
-                    <button
+                        <WhatsAppIcon className={`w-5 h-5 flex-shrink-0 transition-colors duration-500 ${activePlatform === 'whatsapp' ? 'text-black' : 'text-[#25D366]'}`} />
+                        {activePlatform === 'whatsapp' && (
+                            <motion.span
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                transition={{ duration: 0.2 }}
+                                className="font-black uppercase text-[10px] tracking-[2px] whitespace-nowrap text-black"
+                            >
+                                WhatsApp
+                            </motion.span>
+                        )}
+                    </motion.button>
+
+                    {/* Telegram Option */}
+                    <motion.button
+                        layout
                         type="button"
                         onClick={() => setActivePlatform('telegram')}
-                        title="Telegram"
-                        aria-label="Telegram"
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer ${activePlatform === 'telegram'
-                                ? 'bg-[#0088cc] text-white scale-110 shadow-lg shadow-[#0088cc]/40 ring-4 ring-[#0088cc]/20'
-                                : 'bg-[#0088cc] text-white scale-100 opacity-40 hover:opacity-80 hover:scale-105'
-                            }`}
+                        title="Switch to Telegram"
+                        className={`flex items-center justify-center gap-3 h-12 rounded-full cursor-pointer transition-all duration-500 relative border overflow-hidden ${
+                            activePlatform === 'telegram'
+                                ? 'bg-[#0088cc] border-[#0077b5] text-white w-44 shadow-lg shadow-[#0088cc]/30'
+                                : 'bg-[#0088cc]/10 border-[#0088cc]/30 text-[#0088cc] hover:bg-[#0088cc]/20 w-12'
+                        }`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 350, damping: 26 }}
                     >
-                        <TelegramIcon className="w-6 h-6" />
-                    </button>
+                        <TelegramIcon className={`w-5 h-5 flex-shrink-0 transition-colors duration-500 ${activePlatform === 'telegram' ? 'text-white' : 'text-[#0088cc]'}`} />
+                        {activePlatform === 'telegram' && (
+                            <motion.span
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                transition={{ duration: 0.2 }}
+                                className="font-black uppercase text-[10px] tracking-[2px] whitespace-nowrap text-white"
+                            >
+                                Telegram
+                            </motion.span>
+                        )}
+                    </motion.button>
                 </div>
 
                 <AnimatePresence mode="wait">

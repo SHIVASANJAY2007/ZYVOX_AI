@@ -15,6 +15,7 @@ const Features = () => {
     const runnerRightRef = useRef(null);
     const scanLinesRef = useRef(null);
     const progressRef = useRef({ top: null, right: null, bottom: null, left: null });
+    const stickyScrollRef = useRef(null);
 
     const content = [
         {
@@ -88,7 +89,14 @@ const Features = () => {
                 start: "top top",
                 end: scrollEnd,
                 pin: true,
-                scrub: 1
+                scrub: 1,
+                onUpdate: (self) => {
+                    const scrollContainer = stickyScrollRef.current;
+                    if (scrollContainer) {
+                        const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
+                        scrollContainer.scrollTop = self.progress * maxScroll;
+                    }
+                }
             });
 
             // 1. Elegant Title Reveal
@@ -240,7 +248,7 @@ const Features = () => {
 
                 {/* STICKY SCROLL AREA */}
                 <div className="w-full h-[70vh] rounded-[40px] border-[6px] border-black bg-white shadow-[20px_20px_0px_#000] overflow-hidden">
-                    <StickyScrollReveal content={content} />
+                    <StickyScrollReveal containerRef={stickyScrollRef} content={content} />
                 </div>
 
                 {/* SCROLL HINT */}

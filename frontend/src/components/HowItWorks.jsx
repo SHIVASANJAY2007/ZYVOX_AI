@@ -103,13 +103,13 @@ const HowItWorks = () => {
             const totalWidth = container.scrollWidth - window.innerWidth;
 
             gsap.to(container, {
-                x: -totalWidth,
+                x: () => -(container.scrollWidth - window.innerWidth),
                 ease: "none",
                 scrollTrigger: {
                     trigger: sectionRef.current,
                     pin: true,
                     start: "top top",
-                    end: () => `+=${totalWidth + 1000}`,
+                    end: () => `+=${container.scrollWidth - window.innerWidth + 1000}`,
                     scrub: 1,
                     invalidateOnRefresh: true,
                 }

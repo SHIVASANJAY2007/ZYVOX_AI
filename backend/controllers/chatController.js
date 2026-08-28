@@ -30,7 +30,7 @@ export const sendMessageAndGetReply = async (req, res, next) => {
     }
 
     // 2. Call n8n webhook (CORS is bypassed since it's server-to-server)
-    const n8nUrl = process.env.N8N_WEBHOOK_URL || "https://e33uu8smpj6m.shares.zrok.io/webhook/591a4f49-ef7f-443f-9374-13120ae3dc94";
+    const n8nUrl = process.env.N8N_WEBHOOK_URL || "https://prefamiliar-overliterary-princess.ngrok-free.dev/webhook/591a4f49-ef7f-443f-9374-13120ae3dc94";
     
     const response = await fetch(n8nUrl, {
       method: 'POST',
@@ -223,7 +223,7 @@ export const getRecent = async (req, res, next) => {
 };
 
 export const checkN8nStatus = async (req, res, next) => {
-  const n8nUrl = process.env.N8N_WEBHOOK_URL || "https://e33uu8smpj6m.shares.zrok.io/webhook/591a4f49-ef7f-443f-9374-13120ae3dc94";
+  const n8nUrl = process.env.N8N_WEBHOOK_URL || "https://prefamiliar-overliterary-princess.ngrok-free.dev/webhook/591a4f49-ef7f-443f-9374-13120ae3dc94";
   
   try {
     const urlObj = new URL(n8nUrl);

@@ -4,9 +4,11 @@ import { useScroll, motion, AnimatePresence, useMotionValueEvent } from "framer-
 export const StickyScrollReveal = ({
     content,
     contentClassName,
+    containerRef,
 }) => {
     const [activeCard, setActiveCard] = useState(0);
-    const ref = useRef(null);
+    const localRef = useRef(null);
+    const ref = containerRef || localRef;
     const { scrollYProgress } = useScroll({
         target: ref,
         offset: ["start start", "end end"],
