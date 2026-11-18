@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Send, User, Bot, Phone, Video, MoreVertical, Paperclip, Smile, ExternalLink, Shield, Zap, Globe, Clock, CreditCard, CheckCircle2, ArrowLeft, Download } from 'lucide-react';
 import AnimatedIconBackground from './AnimatedIconBackground';
-import { N8N_WEBHOOK_URL, SIGNUP_ENABLED, WHATSAPP_API_URL, TELEGRAM_API_URL, BACKEND_API_URL } from '../config';
+import { SIGNUP_ENABLED, WHATSAPP_API_URL, TELEGRAM_API_URL, BACKEND_API_URL } from '../config';
 import ResponseRenderer from './ResponseRenderer';
 import { downloadSingleReplyPDF, downloadFullChatPDF } from '../utils/pdfGenerator';
 
@@ -19,12 +19,7 @@ const TelegramIcon = ({ className }) => (
     </svg>
 );
 
-const isTravelPlan = (text) => {
-    if (!text || typeof text !== 'string') return false;
-    const lower = text.toLowerCase();
 
-    return lower.includes('rough plan') || lower.includes('final plan');
-};
 
 const ChatMessage = ({ text, sender, isBot, time, type, data, userName, messages, responseType }) => {
     const handleDownloadPDF = () => {
@@ -144,7 +139,6 @@ const GetPlan = () => {
     const navigate = useNavigate();
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
-    const [isPlanCreated, setIsPlanCreated] = useState(false);
     const chatEndRef = useRef(null);
     const [chatStatus, setChatStatus] = useState('checking');
     const [activePlatform, setActivePlatform] = useState('whatsapp');
@@ -309,31 +303,6 @@ const GetPlan = () => {
         }
     };
 
-    const triggerPlan = (time) => {
-        setMessages(prev => [...prev,
-        {
-            type: 'plan',
-            data: {
-                title: "The Zenith Odyssey",
-                duration: "12 Days / 11 Nights",
-                cost: "$12,400 per person"
-            },
-            isBot: true,
-            time: time
-        }
-        ]);
-
-        setTimeout(() => {
-            setMessages(prev => [...prev, {
-                type: 'whatsapp',
-                isBot: true,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }]);
-        }, 1500);
-
-        setIsPlanCreated(true);
-    };
-
     return (
         <div className="flex h-screen bg-neutral-100 text-neutral-900 overflow-hidden relative">
             {/* Subtle background glow blobs */}
@@ -447,11 +416,7 @@ const GetPlan = () => {
                     />
                     <button
                         type="submit"
-                        disabled={isPlanCreated}
-                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isPlanCreated
-                                ? 'bg-neutral-200 cursor-not-allowed text-neutral-400'
-                                : 'bg-[#ff6d38] text-white hover:scale-105 active:scale-95 shadow-lg shadow-[#ff6d38]/15 hover:bg-[#e0531b]'
-                            }`}
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all bg-[#ff6d38] text-white hover:scale-105 active:scale-95 shadow-lg shadow-[#ff6d38]/15 hover:bg-[#e0531b]"
                     >
                         <Send size={24} />
                     </button>

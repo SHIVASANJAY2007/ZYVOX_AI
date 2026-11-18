@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Hero from './Hero'
 import PillNav from './PillNav'
@@ -10,8 +10,6 @@ import Footer from './Footer'
 
 const LandingPage = () => {
     const location = useLocation()
-    const [showIntro, setShowIntro] = useState(true)
-    const [isFading, setIsFading] = useState(false)
 
     const navItems = [
         { label: 'Explore', href: '#features' },
@@ -20,21 +18,6 @@ const LandingPage = () => {
         { label: 'Pricing', href: '#pricing' },
         { label: 'Open App', href: '/get-plan' },
     ]
-
-    const handleSkip = () => {
-        setIsFading(true)
-        setTimeout(() => {
-            setShowIntro(false)
-        }, 1500) // Match the 1.5s transition in CSS
-    }
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            handleSkip()
-        }, 10000) // 10 seconds
-
-        return () => clearTimeout(timer)
-    }, [])
 
     useEffect(() => {
         if (location.hash) {

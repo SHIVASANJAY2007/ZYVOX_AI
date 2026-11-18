@@ -4,22 +4,32 @@ import { jsPDF } from 'jspdf';
 const cleanTextForParsing = (str) => {
     if (!str || typeof str !== 'string') return '';
     
-    // Replace smart punctuation
+    // Replace smart punctuation and convert Indian Rupee symbol ₹ (and its various corrupted ANSI forms like ¹, â‚¹) to Rs.
     let cleaned = str
+        .replace(/\u20B9\s*/g, 'Rs. ') // Unicode Rupee symbol ₹
+        .replace(/\u00B9\s*/g, 'Rs. ') // Superscript 1 ¹ (ISO-8859-1/Win-1252 corrupted ₹)
+        .replace(/\u00E2\u201A\u00B9\s*/g, 'Rs. ') // UTF-8 read as Windows-1252 â‚¹
+        .replace(/â\s*‚\s*¹\s*/g, 'Rs. ') // Space separated â‚¹
         .replace(/[\u2018\u2019]/g, "'") // Smart single quotes
         .replace(/[\u201C\u201D]/g, '"') // Smart double quotes
         .replace(/[\u2013\u2014]/g, '-') // En-dash and Em-dash
         .replace(/\u2022/g, '-'); // Unicode bullet U+2022
         
-    // Keep only printable ASCII (characters 32-126) and common currency symbols: ₹ (U+20B9), £ (U+00A3), € (U+20AC), ¥ (U+00A5)
-    const allowedCharsRegex = /[^\x20-\x7E\u20B9\u00A3\u20AC\u00A5]/g;
+    // Keep only printable ASCII (characters 32-126) and common currency symbols: £ (U+00A3), € (U+20AC), ¥ (U+00A5)
+    const allowedCharsRegex = /[^\x20-\x7E\u00A3\u20AC\u00A5]/g;
     return cleaned.replace(allowedCharsRegex, '').trim();
 };
 
 // Simple text cleaner for standard labels (e.g. usernames)
 const cleanLabelText = (str) => {
     if (!str || typeof str !== 'string') return '';
-    return str.replace(/[^\x20-\x7E\u20B9\u00A3\u20AC\u00A5]/g, '').trim();
+    return str
+        .replace(/\u20B9\s*/g, 'Rs. ')
+        .replace(/\u00B9\s*/g, 'Rs. ')
+        .replace(/\u00E2\u201A\u00B9\s*/g, 'Rs. ')
+        .replace(/â\s*‚\s*¹\s*/g, 'Rs. ')
+        .replace(/[^\x20-\x7E\u00A3\u20AC\u00A5]/g, '')
+        .trim();
 };
 
 // Helper to scan messages and extract confirmed travel dates & traveler counts
@@ -357,18 +367,18 @@ const renderMarkdownToPDF = (doc, markdownText, startY, margin, printableWidth, 
         // Ensure table header + at least one data row fits on the page
         checkPageBreak(18);
 
-        // 1. Draw Table Header Row background
-        doc.setFillColor(245, 245, 245);
+        // 1. Draw Table Header Row background (Brand Orange Header)
+        doc.setFillColor(255, 109, 56);
         doc.rect(margin, y - 4, printableWidth, 7, 'F');
-        doc.setDrawColor(215, 215, 215);
+        doc.setDrawColor(255, 109, 56);
         doc.setLineWidth(0.3);
         doc.line(margin, y - 4, margin + printableWidth, y - 4);
         doc.line(margin, y + 3, margin + printableWidth, y + 3);
 
-        // Draw header text cells
+        // Draw header text cells in white
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8.5);
-        doc.setTextColor(50, 50, 50);
+        doc.setTextColor(255, 255, 255);
 
         headers.forEach((headerText, colIdx) => {
             const cellX = margin + (colIdx * colWidth) + 2;
@@ -441,11 +451,12 @@ const renderMarkdownToPDF = (doc, markdownText, startY, margin, printableWidth, 
             y += rowHeight;
         });
 
-        // 3. Draw vertical columns border grid
+        // 3. Draw vertical columns border grid (cleaner header with no cut-through lines)
         doc.setDrawColor(220, 220, 220);
         for (let colIdx = 0; colIdx <= colCount; colIdx++) {
             const lineX = margin + (colIdx * colWidth);
-            doc.line(lineX, startY - 4, lineX, y - 3.5);
+            const lineStartY = (colIdx === 0 || colIdx === colCount) ? (startY - 4) : (startY + 3);
+            doc.line(lineX, lineStartY, lineX, y - 3.5);
         }
 
         y += 4;
@@ -518,7 +529,11 @@ const renderMarkdownToPDF = (doc, markdownText, startY, margin, printableWidth, 
 
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(fontSize);
-            doc.setTextColor(30, 30, 30);
+            if (level === 1) {
+                doc.setTextColor(255, 109, 56); // Brand Orange for H1
+            } else {
+                doc.setTextColor(30, 30, 30);
+            }
             doc.text(headingText, margin, y);
             y += fontSize / 2 + spacing;
             continue;
@@ -610,17 +625,28 @@ export const downloadSingleReplyPDF = (messageText, userName = 'Explorer', messa
     doc.rect(0, 0, pageWidth, 8, 'F');
     y += 10;
 
-    // Brand logo
+    // Vector Logo left of title (Rounded Square with 'Z' inside)
+    doc.setFillColor(255, 109, 56); // Brand orange
+    doc.roundedRect(margin, y - 6, 12, 12, 2.5, 2.5, 'F');
+    
+    // White 'Z' vector lines
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(1.2);
+    doc.line(margin + 4, y - 3, margin + 8, y - 3);
+    doc.line(margin + 8, y - 3, margin + 4, y + 3);
+    doc.line(margin + 4, y + 3, margin + 8, y + 3);
+
+    // Brand logo title
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
     doc.setTextColor(255, 109, 56);
-    doc.text('ZYVOX AI', margin, y);
+    doc.text('ZYVOX AI', margin + 16, y + 2);
     
     // Brand subtitle
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
     doc.setTextColor(120, 120, 120);
-    doc.text('YOUR NEURAL TRAVEL CONCIERGE', margin, y + 5);
+    doc.text('YOUR NEURAL TRAVEL CONCIERGE', margin + 16, y + 7);
 
     // Right-aligned Metadata Grid
     const dateStr = new Date().toLocaleDateString();
@@ -638,9 +664,9 @@ export const downloadSingleReplyPDF = (messageText, userName = 'Explorer', messa
     
     y += 12;
 
-    // Elegant Divider Line
-    doc.setDrawColor(220, 220, 220);
-    doc.setLineWidth(0.5);
+    // Elegant Divider Line (Brand Orange)
+    doc.setDrawColor(255, 109, 56);
+    doc.setLineWidth(0.8);
     doc.line(margin, y, pageWidth - margin, y);
     
     y += 12;
@@ -681,17 +707,28 @@ export const downloadFullChatPDF = (messages, userName = 'Explorer') => {
     doc.rect(0, 0, pageWidth, 8, 'F');
     y += 10;
 
-    // Brand logo
+    // Vector Logo left of title (Rounded Square with 'Z' inside)
+    doc.setFillColor(255, 109, 56); // Brand orange
+    doc.roundedRect(margin, y - 6, 12, 12, 2.5, 2.5, 'F');
+    
+    // White 'Z' vector lines
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(1.2);
+    doc.line(margin + 4, y - 3, margin + 8, y - 3);
+    doc.line(margin + 8, y - 3, margin + 4, y + 3);
+    doc.line(margin + 4, y + 3, margin + 8, y + 3);
+
+    // Brand logo title
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
     doc.setTextColor(255, 109, 56);
-    doc.text('ZYVOX AI', margin, y);
+    doc.text('ZYVOX AI', margin + 16, y + 2);
     
     // Brand subtitle
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
     doc.setTextColor(120, 120, 120);
-    doc.text('YOUR NEURAL TRAVEL CONCIERGE', margin, y + 5);
+    doc.text('YOUR NEURAL TRAVEL CONCIERGE', margin + 16, y + 7);
 
     // Right-aligned Metadata Grid
     const dateStr = new Date().toLocaleDateString();
@@ -709,9 +746,9 @@ export const downloadFullChatPDF = (messages, userName = 'Explorer') => {
     
     y += 12;
 
-    // Elegant Divider Line
-    doc.setDrawColor(220, 220, 220);
-    doc.setLineWidth(0.5);
+    // Elegant Divider Line (Brand Orange)
+    doc.setDrawColor(255, 109, 56);
+    doc.setLineWidth(0.8);
     doc.line(margin, y, pageWidth - margin, y);
     
     y += 12;
@@ -752,19 +789,19 @@ export const downloadFullChatPDF = (messages, userName = 'Explorer') => {
         
         checkPageBreak(18);
 
-        // Draw a premium looking Pill Tag for Sender
+        // Draw a premium looking Pill Tag for Sender (Rounded Corners)
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8);
         const nameWidth = doc.getTextWidth(senderName);
         
         if (msg.isBot) {
             doc.setFillColor(255, 246, 242); // Light orange background
-            doc.rect(margin, y - 4, nameWidth + 6, 6, 'F');
+            doc.roundedRect(margin, y - 4.5, nameWidth + 6, 6.5, 1.5, 1.5, 'F');
             doc.setTextColor(255, 109, 56); // Brand orange text
             doc.text(senderName, margin + 3, y);
         } else {
             doc.setFillColor(245, 245, 245); // Light gray background
-            doc.rect(margin, y - 4, nameWidth + 6, 6, 'F');
+            doc.roundedRect(margin, y - 4.5, nameWidth + 6, 6.5, 1.5, 1.5, 'F');
             doc.setTextColor(80, 80, 80); // Gray text
             doc.text(senderName, margin + 3, y);
         }

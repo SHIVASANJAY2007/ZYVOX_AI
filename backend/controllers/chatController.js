@@ -32,18 +32,27 @@ export const sendMessageAndGetReply = async (req, res, next) => {
     // 2. Call n8n webhook (CORS is bypassed since it's server-to-server)
     const n8nUrl = process.env.N8N_WEBHOOK_URL || "https://prefamiliar-overliterary-princess.ngrok-free.dev/webhook/591a4f49-ef7f-443f-9374-13120ae3dc94";
     
-    const response = await fetch(n8nUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'skip_zrok_interstitial': 'true'
-      },
-      body: JSON.stringify({
-        chatInput: message,
-        sessionId: sessionId || '',
-        personNo: personId || ''
-      })
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
+
+    let response;
+    try {
+      response = await fetch(n8nUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'skip_zrok_interstitial': 'true'
+        },
+        body: JSON.stringify({
+          chatInput: message,
+          sessionId: sessionId || '',
+          personNo: personId || ''
+        }),
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       const errText = await response.text();
@@ -110,9 +119,12 @@ export const sendMessageAndGetReply = async (req, res, next) => {
 
   } catch (error) {
     console.error("Error in sendMessageAndGetReply proxy:", error);
-    return res.status(500).json({
+    const isTimeout = error.name === 'AbortError';
+    return res.status(isTimeout ? 502 : 500).json({
       success: false,
-      message: 'Failed to communicate with n8n AI Assistant.',
+      message: isTimeout 
+        ? 'The AI Assistant took too long to respond. Please try again.' 
+        : 'Failed to communicate with n8n AI Assistant.',
       error: error.message
     });
   }
